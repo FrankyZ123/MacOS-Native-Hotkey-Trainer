@@ -39,14 +39,15 @@ class TrainerLauncher(TrainerCore):
     """Main launcher for HotKey Trainer"""
     
     VERSION = "2.0"
-    REQUIRED_FILES = ['viewer.py', 'quiz_system.py', 'trainer_core.py']
-    TOOLS_DIR = Path('tools')  # Define tools directory
+    REQUIRED_FILES = ['viewer.py', 'quiz_system.py', 'trainer_core.py', 'typing_test.py']
+    TOOLS_DIR = Path('tools')
     
     def __init__(self):
         super().__init__()
         self.interceptor = InterceptorManager()
         self.running = True
         self.tools = []
+        self.current_menu = 'main'  # Track current menu
         self._ensure_tools_directory()
         self._load_tools()
     
@@ -134,10 +135,6 @@ class TrainerLauncher(TrainerCore):
             if not Path(file).exists():
                 issues.append(f"Missing {file}")
         
-        # Check for shortcut files
-        if not self.tools:
-            issues.append(f"No shortcut files found in '{self.TOOLS_DIR}' directory (shortcuts_*.json)")
-        
         if issues:
             self._display_issues(issues)
             return False
@@ -150,12 +147,87 @@ class TrainerLauncher(TrainerCore):
         for issue in issues:
             print(f"  • {issue}")
     
-    def display_menu(self) -> Optional[str]:
-        """Display main menu and get user choice"""
+    def display_main_menu(self) -> Optional[str]:
+        """Display streamlined main menu"""
         self._show_status()
-        options = self._build_menu_options()
-        self._display_menu_options(options)
-        return self._get_menu_choice(options)
+        
+        print("Choose an option:")
+        print()
+        print("  1) 🎯 Select Tool to Practice")
+        print("  2) ⌨️  Typing Test")
+        print("  3) ⚙️  Settings")
+        print("  4) ❌ Exit")
+        print()
+        
+        choice = input("Enter choice [1-4]: ")
+        return choice if choice in ['1', '2', '3', '4'] else None
+    
+    def display_tools_menu(self) -> Optional[str]:
+        """Display tool selection menu"""
+        self.show_header("🎯 SELECT TOOL TO PRACTICE")
+        
+        if not self.tools:
+            self.print_color("📂 No tools found!", 'YELLOW')
+            print(f"Add shortcuts_*.json files to '{self.TOOLS_DIR}' directory")
+            print()
+            print("  0) ← Back to Main Menu")
+            print()
+            choice = input("Enter choice: ")
+            return choice
+        
+        print("Available tools:")
+        print()
+        
+        for i, tool in enumerate(self.tools, 1):
+            print(f"  {i}) {tool.icon} {tool.name}")
+            if tool.description:
+                print(f"     {tool.description} ({tool.shortcut_count} shortcuts)")
+            else:
+                print(f"     {tool.shortcut_count} shortcuts")
+            print()
+        
+        print(f"  0) ← Back to Main Menu")
+        print()
+        
+        max_option = len(self.tools)
+        choice = input(f"Enter choice [0-{max_option}]: ")
+        
+        # Validate choice
+        try:
+            choice_num = int(choice)
+            if 0 <= choice_num <= max_option:
+                return choice
+        except ValueError:
+            pass
+        
+        return None
+    
+    def display_settings_menu(self) -> Optional[str]:
+        """Display settings menu"""
+        self.show_header("⚙️ SETTINGS")
+        
+        print("Tools & Utilities:")
+        print()
+        print("  1) 👁️ Real-time Key Viewer")
+        print("     See what keys you're pressing")
+        print()
+        print("  2) 🎯 Freestyle Practice")
+        print("     Manual control mode")
+        print()
+        print("  3) 🔧 Interceptor Status")
+        print("     Check/restart interceptor")
+        print()
+        print("  4) ➕ Add New Tool")
+        print("     Create shortcuts for a new tool")
+        print()
+        print("  5) 📂 Open Tools Folder")
+        print("     Open the tools folder in Finder")
+        print()
+        print("  0) ← Back to Main Menu")
+        print()
+        
+        choice = input("Enter choice [0-5]: ")
+        return choice if choice in ['0', '1', '2', '3', '4', '5'] else None
     
     def _show_status(self):
         """Show current trainer status"""
@@ -165,97 +237,56 @@ class TrainerLauncher(TrainerCore):
             self.print_color("Status: 🟢 Trainer OFF (keys normal)", 'GREEN')
         print()
     
-    def _build_menu_options(self) -> Dict[str, MenuOption]:
-        """Build available menu options"""
-        options = {}
-        option_num = 1
-        
-        # Core features
-        options[str(option_num)] = MenuOption(
-            'viewer',
-            "👁️ Real-time Key Viewer",
-            "See what keys you're pressing",
-            self.run_viewer
-        )
-        option_num += 1
-        
-        # Tool-specific practice
-        if self.tools:
-            for tool in self.tools:
-                options[str(option_num)] = MenuOption(
-                    ('quiz', tool.file),
-                    f"{tool.icon} {tool.name} Practice",
-                    tool.description or f"Practice {tool.shortcut_count} shortcuts",
-                    lambda t=tool: self.run_quiz(t.file)
-                )
-                option_num += 1
-        
-        # Utility options
-        utility_options = [
-            MenuOption('freestyle', "🎯 Freestyle Practice", 
-                      "Manual control mode", self.run_freestyle),
-            MenuOption('status', "🔧 Interceptor Status", 
-                      "Check/restart interceptor", self.check_interceptor_status),
-            MenuOption('add_tool', "➕ Add New Tool", 
-                      "Create shortcuts for a new tool", self.create_new_tool),
-            MenuOption('open_tools', "📂 Open Tools Folder", 
-                      "Open the tools folder in Finder", self.open_tools_folder),
-            MenuOption('exit', "❌ Exit", "", self.exit_launcher)
-        ]
-        
-        for opt in utility_options:
-            options[str(option_num)] = opt
-            option_num += 1
-        
-        return options
+    def handle_main_menu_choice(self, choice: str):
+        """Handle main menu selection"""
+        if choice == '1':
+            # Go to tools menu
+            self.current_menu = 'tools'
+        elif choice == '2':
+            # Run typing test
+            self.run_typing_test()
+        elif choice == '3':
+            # Go to settings menu
+            self.current_menu = 'settings'
+        elif choice == '4':
+            # Exit
+            self.exit_launcher()
     
-    def _display_menu_options(self, options: Dict[str, MenuOption]):
-        """Display menu options organized by category"""
-        self.print_color("Choose an option:", 'MAGENTA')
-        print()
+    def handle_tools_menu_choice(self, choice: str):
+        """Handle tools menu selection"""
+        if choice == '0':
+            self.current_menu = 'main'
+            return
         
-        # Group options by type
-        practice_options = []
-        utility_options = []
-        
-        for key, opt in options.items():
-            if isinstance(opt.key, tuple) and opt.key[0] == 'quiz':
-                practice_options.append((key, opt))
-            elif opt.key in ['viewer', 'freestyle']:
-                practice_options.insert(0, (key, opt))
-            else:
-                utility_options.append((key, opt))
-        
-        # Display practice options
-        if practice_options:
-            for key, opt in practice_options[:2]:  # Viewer and freestyle
-                self._display_single_option(key, opt)
-            
-            if len(practice_options) > 2:
-                print()
-                self.print_color("Practice Shortcuts:", 'CYAN')
-                for key, opt in practice_options[2:]:
-                    self._display_single_option(key, opt)
-        
-        # Display utility options
-        if utility_options:
-            print()
-            for key, opt in utility_options:
-                self._display_single_option(key, opt)
+        try:
+            tool_index = int(choice) - 1
+            if 0 <= tool_index < len(self.tools):
+                self.run_quiz(self.tools[tool_index].file)
+        except (ValueError, IndexError):
+            pass
     
-    def _display_single_option(self, key: str, option: MenuOption):
-        """Display a single menu option"""
-        print(f"  {key}) {option.label}")
-        if option.description:
-            print(f"     ", end="")
-            self.print_color(option.description, 'BLUE')
+    def handle_settings_menu_choice(self, choice: str):
+        """Handle settings menu selection"""
+        if choice == '0':
+            self.current_menu = 'main'
+        elif choice == '1':
+            self.run_viewer()
+        elif choice == '2':
+            self.run_freestyle()
+        elif choice == '3':
+            self.check_interceptor_status()
+        elif choice == '4':
+            self.create_new_tool()
+            self._load_tools()  # Reload tools after creation
+        elif choice == '5':
+            self.open_tools_folder()
     
-    def _get_menu_choice(self, options: Dict[str, MenuOption]) -> Optional[str]:
-        """Get and validate user menu choice"""
-        max_option = len(options)
-        print()
-        choice = input(f"Enter choice [1-{max_option}]: ")
-        return choice if choice in options else None
+    def run_typing_test(self):
+        """Launch the typing test"""
+        self.print_color("\n⌨️ Starting Typing Test...", 'GREEN')
+        print("The trainer will activate automatically")
+        time.sleep(1)
+        subprocess.run([sys.executable, "typing_test.py"])
     
     def open_tools_folder(self):
         """Open the tools folder in Finder"""
@@ -359,7 +390,6 @@ class TrainerLauncher(TrainerCore):
         """Create a new tool configuration"""
         creator = ToolCreator(self)
         creator.create()
-        self._load_tools()  # Reload tools after creation
     
     def exit_launcher(self):
         """Exit the launcher"""
@@ -407,45 +437,55 @@ class TrainerLauncher(TrainerCore):
             sys.exit(1)
         
         self.print_color(f"✅ Interceptor running (PID: {pid})", 'GREEN')
-        self._display_available_tools()
-    
-    def _display_available_tools(self):
-        """Display available tools summary"""
+        
+        # Show available resources
         if self.tools:
-            print(f"\n📚 {len(self.tools)} tool(s) available for practice:")
-            for tool in self.tools:
-                print(f"   {tool.icon} {tool.name} ({tool.shortcut_count} shortcuts)")
+            print(f"📚 {len(self.tools)} tool(s) available for practice")
         else:
-            self.print_color(f"\n📂 No tools found in '{self.TOOLS_DIR}' folder", 'YELLOW')
-            print("Add shortcuts_*.json files to get started!")
+            self.print_color(f"📂 No tools found in '{self.TOOLS_DIR}' folder", 'YELLOW')
         print()
     
     def _main_loop(self):
         """Main menu loop"""
         while self.running:
-            choice = self.display_menu()
+            # Display appropriate menu based on current state
+            if self.current_menu == 'main':
+                choice = self.display_main_menu()
+                if choice:
+                    self.handle_main_menu_choice(choice)
+                else:
+                    self._handle_invalid_choice()
+                    
+            elif self.current_menu == 'tools':
+                choice = self.display_tools_menu()
+                if choice:
+                    self.handle_tools_menu_choice(choice)
+                else:
+                    self._handle_invalid_choice()
+                
+                # Stay in tools menu unless going back
+                if choice != '0':
+                    input("\nPress Enter to continue...")
+                    
+            elif self.current_menu == 'settings':
+                choice = self.display_settings_menu()
+                if choice:
+                    self.handle_settings_menu_choice(choice)
+                else:
+                    self._handle_invalid_choice()
+                
+                # Stay in settings menu unless going back
+                if choice != '0':
+                    input("\nPress Enter to continue...")
             
-            if choice is None:
-                self._handle_invalid_choice()
-            else:
-                self._execute_menu_choice(choice)
+            # Clear screen for next iteration
+            if self.running and self.current_menu == 'main':
+                self.show_header(f"🎮 HotKey Trainer v{self.VERSION}")
     
     def _handle_invalid_choice(self):
         """Handle invalid menu choice"""
         self.print_color("❌ Invalid choice. Please try again.", 'RED')
         time.sleep(1)
-        self.show_header(f"🎮 HotKey Trainer v{self.VERSION}")
-    
-    def _execute_menu_choice(self, choice: str):
-        """Execute the selected menu option"""
-        options = self._build_menu_options()
-        if choice in options:
-            options[choice].action()
-            
-            # Post-action handling
-            if options[choice].key != 'exit':
-                input("\nPress Enter to continue...")
-                self.show_header(f"🎮 HotKey Trainer v{self.VERSION}")
 
 
 class ToolCreator:
@@ -552,7 +592,7 @@ class ToolCreator:
     "difficulty": 1,
     "tips": ["Opens command palette", "Search for any command"]
   }''')
-        print(f"\nYou can also open the tools folder from the main menu.")
+        print(f"\nYou can also open the tools folder from the Settings menu.")
 
 
 def main():
