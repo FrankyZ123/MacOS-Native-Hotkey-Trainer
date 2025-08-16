@@ -1,30 +1,236 @@
 {
-  "name": "'Asana'",
-  "description": "",
-  "icon": "\ud83d\udce5",
+  "name": "Asana",
+  "description": "Asana project management keyboard shortcuts for Mac",
+  "icon": "📊",
   "version": "1.0.0",
   "categories": {
-    "basic": {
-      "name": "Basic",
+    "navigation": {
+      "name": "Navigation",
+      "color": "blue",
+      "icon": "🧭"
+    },
+    "tasks": {
+      "name": "Task Management",
       "color": "green",
-      "icon": "\ud83d\udfe2"
+      "icon": "✅"
+    },
+    "views": {
+      "name": "Views & Display",
+      "color": "magenta",
+      "icon": "👁️"
+    },
+    "actions": {
+      "name": "Quick Actions",
+      "color": "yellow",
+      "icon": "⚡"
     }
   },
   "shortcuts": [
     {
-      "keys": "cmd+n",
-      "description": "Example shortcut - replace this",
-      "category": "basic",
+      "keys": "tab+n",
+      "description": "Create new task",
+      "category": "tasks",
       "difficulty": 1,
-      "tips": [
-        "Replace this with actual shortcuts"
-      ]
+      "tips": ["Quickly add tasks without mouse", "Works in any view"]
+    },
+    {
+      "keys": "cmd+return",
+      "description": "Complete selected task",
+      "category": "tasks",
+      "difficulty": 1,
+      "tips": ["Mark task as complete", "Toggle completion status"]
+    },
+    {
+      "keys": "tab+m",
+      "description": "Assign task to me",
+      "category": "tasks",
+      "difficulty": 1,
+      "tips": ["Quick self-assignment", "No need to search for your name"]
+    },
+    {
+      "keys": "tab+d",
+      "description": "Set due date",
+      "category": "tasks",
+      "difficulty": 2,
+      "tips": ["Opens date picker", "Type dates naturally like 'tomorrow'"]
+    },
+    {
+      "keys": "tab+f",
+      "description": "Add follower",
+      "category": "tasks",
+      "difficulty": 2,
+      "tips": ["Add people to follow task", "Keep team informed"]
+    },
+    {
+      "keys": "tab+s",
+      "description": "Create subtask",
+      "category": "tasks",
+      "difficulty": 2,
+      "tips": ["Break down complex tasks", "Creates subtask under current task"]
+    },
+    {
+      "keys": "cmd+/",
+      "description": "Search",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["Global search", "Find anything in workspace"]
+    },
+    {
+      "keys": "tab+h",
+      "description": "Home",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["Go to home view", "See your dashboard"]
+    },
+    {
+      "keys": "tab+i",
+      "description": "Inbox",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["View notifications", "See updates and mentions"]
+    },
+    {
+      "keys": "j",
+      "description": "Next task/item",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["Move down in list", "Vim-style navigation"]
+    },
+    {
+      "keys": "k",
+      "description": "Previous task/item",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["Move up in list", "Vim-style navigation"]
+    },
+    {
+      "keys": "return",
+      "description": "Open task details",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["View full task", "Edit task properties"]
+    },
+    {
+      "keys": "escape",
+      "description": "Close task details/Cancel",
+      "category": "navigation",
+      "difficulty": 1,
+      "tips": ["Close panes", "Cancel current action"]
+    },
+    {
+      "keys": "tab+1",
+      "description": "List view",
+      "category": "views",
+      "difficulty": 1,
+      "tips": ["Switch to list layout", "Traditional task list"]
+    },
+    {
+      "keys": "tab+2",
+      "description": "Board view",
+      "category": "views",
+      "difficulty": 1,
+      "tips": ["Kanban board layout", "See tasks by column"]
+    },
+    {
+      "keys": "tab+3",
+      "description": "Calendar view",
+      "category": "views",
+      "difficulty": 1,
+      "tips": ["See tasks on calendar", "Visualize deadlines"]
+    },
+    {
+      "keys": "tab+4",
+      "description": "Timeline view",
+      "category": "views",
+      "difficulty": 2,
+      "tips": ["Gantt chart view", "See project timeline"]
+    },
+    {
+      "keys": "tab+x",
+      "description": "Focus mode",
+      "category": "views",
+      "difficulty": 2,
+      "tips": ["Hide sidebar", "Minimize distractions"]
+    },
+    {
+      "keys": "tab+b",
+      "description": "Archive task",
+      "category": "actions",
+      "difficulty": 2,
+      "tips": ["Archive completed tasks", "Clean up your view"]
+    },
+    {
+      "keys": "tab+c",
+      "description": "Comment on task",
+      "category": "actions",
+      "difficulty": 1,
+      "tips": ["Add comment quickly", "Collaborate on tasks"]
+    },
+    {
+      "keys": "tab+a",
+      "description": "Add attachment",
+      "category": "actions",
+      "difficulty": 2,
+      "tips": ["Attach files", "Add documents to task"]
+    },
+    {
+      "keys": "cmd+c",
+      "description": "Copy task",
+      "category": "actions",
+      "difficulty": 1,
+      "tips": ["Copy selected task", "Duplicate with Cmd+V"]
+    },
+    {
+      "keys": "cmd+v",
+      "description": "Paste task",
+      "category": "actions",
+      "difficulty": 1,
+      "tips": ["Paste copied task", "Create duplicate"]
+    },
+    {
+      "keys": "cmd+shift+up",
+      "description": "Move task up",
+      "category": "actions",
+      "difficulty": 2,
+      "tips": ["Reorder tasks", "Change priority"]
+    },
+    {
+      "keys": "cmd+shift+down",
+      "description": "Move task down",
+      "category": "actions",
+      "difficulty": 2,
+      "tips": ["Reorder tasks", "Adjust sequence"]
     }
   ],
   "practice_sets": {
+    "beginner": {
+      "name": "Asana Beginner",
+      "description": "Essential task and navigation shortcuts",
+      "shortcut_indices": [0, 1, 6, 9, 10, 11, 12]
+    },
+    "task_master": {
+      "name": "Task Master",
+      "description": "Master task management",
+      "shortcut_indices": [0, 1, 2, 3, 4, 5, 19]
+    },
+    "navigation_pro": {
+      "name": "Navigation Pro",
+      "description": "Navigate Asana like a pro",
+      "shortcut_indices": [6, 7, 8, 9, 10, 11, 12]
+    },
+    "views_and_actions": {
+      "name": "Views & Actions",
+      "description": "Master different views and quick actions",
+      "shortcut_indices": [13, 14, 15, 16, 17, 18, 19, 20]
+    },
+    "quick_15": {
+      "name": "Quick 15",
+      "description": "Top 15 most useful Asana shortcuts",
+      "shortcut_indices": [0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 14, 19, 20]
+    },
     "all": {
       "name": "All Shortcuts",
-      "description": "Practice all shortcuts",
+      "description": "Practice all Asana shortcuts",
       "shortcut_indices": null
     }
   }

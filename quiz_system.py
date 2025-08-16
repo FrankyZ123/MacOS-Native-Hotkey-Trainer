@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Unified Quiz System - loads shortcuts from JSON files
-Extensible system for practicing any tool's keyboard shortcuts
+Unified Quiz System - Universal keyboard shortcut trainer
+Loads shortcuts from JSON files for any application
 """
 
 import json
@@ -10,97 +10,166 @@ import sys
 import random
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+from dataclasses import dataclass, field
+from enum import Enum
 from trainer_core import TrainerCore
 
-class ShortcutQuiz(TrainerCore):
-    """Generic quiz system that loads shortcuts from JSON files"""
+
+class Difficulty(Enum):
+    """Difficulty levels for shortcuts"""
+    EASY = 1
+    MEDIUM = 2
+    HARD = 3
+
+
+@dataclass
+class Shortcut:
+    """Data class for a keyboard shortcut"""
+    keys: str
+    description: str
+    category: str = "basic"
+    difficulty: int = 1
+    tips: List[str] = field(default_factory=list)
+    is_chord: bool = False
     
-    def __init__(self, shortcuts_file: str):
+    def __post_init__(self):
+        """Detect chord shortcuts automatically"""
+        if ' ' in self.keys and not self.is_chord:
+            self.is_chord = True
+
+
+@dataclass
+class Category:
+    """Category information"""
+    name: str
+    color: str = "blue"
+    icon: str = "📁"
+
+
+@dataclass
+class PracticeSet:
+    """Practice set configuration"""
+    name: str
+    description: str
+    shortcut_indices: Optional[List[int]] = None
+
+
+class ShortcutQuiz(TrainerCore):
+    """Universal quiz system for keyboard shortcuts"""
+    
+    # Class-level formatting constants
+    KEY_DISPLAY_MAP = {
+        'cmd': '⌘',
+        'alt': '⌥', 
+        'shift': '⇧',
+        'ctrl': '⌃',
+        'fn': 'fn',
+        'tab': 'Tab',
+        'space': 'Space',
+        'return': 'Return',
+        'delete': 'Delete',
+        'forwarddelete': 'Forward Delete',
+        'escape': 'Esc',
+        'left': '←',
+        'right': '→',
+        'up': '↑',
+        'down': '↓',
+        'home': 'Home',
+        'end': 'End',
+        'pageup': 'Page Up',
+        'pagedown': 'Page Down'
+    }
+    
+    EXIT_KEYS = ['escape', 'esc', 'ctrl+c', 'cmd+q', 'cmd+.']
+    
+    def __init__(self, shortcuts_file: str = None):
+        """Initialize quiz with optional shortcuts file"""
         super().__init__()
-        self.shortcuts_file = shortcuts_file
-        self.data = self.load_shortcuts()
         
-        # Extract data from JSON
-        self.tool_name = self.data['name']
-        self.tool_icon = self.data.get('icon', '🎮')
-        self.tool_description = self.data.get('description', '')
-        self.categories = self.data.get('categories', {})
-        self.shortcuts = self.data['shortcuts']
-        self.practice_sets = self.data.get('practice_sets', {})
-        
-        # Quiz state
-        self.exit_keys = ['escape', 'esc', 'ctrl+c', 'cmd+q', 'cmd+.']
+        if shortcuts_file:
+            self.load_from_file(shortcuts_file)
+        else:
+            self._initialize_empty()
+            
+        self._reset_stats()
+    
+    def _initialize_empty(self):
+        """Initialize with empty data"""
+        self.tool_name = "Generic Tool"
+        self.tool_icon = "🎮"
+        self.tool_description = ""
+        self.categories = {}
+        self.shortcuts = []
+        self.practice_sets = {}
+    
+    def _reset_stats(self):
+        """Reset statistics for a new session"""
         self.stats = {
             'completed': 0,
             'skipped': 0,
             'attempts': [],
-            'by_category': {},
-            'by_difficulty': {1: 0, 2: 0, 3: 0}
+            'by_category': {cat_id: 0 for cat_id in self.categories},
+            'by_difficulty': {d.value: 0 for d in Difficulty}
         }
-        
-        # Initialize category stats
-        for cat_id in self.categories:
-            self.stats['by_category'][cat_id] = 0
     
-    def load_shortcuts(self) -> Dict:
-        """Load shortcuts from JSON file"""
-        json_path = Path(self.shortcuts_file)
+    def load_from_file(self, shortcuts_file: str):
+        """Load shortcuts configuration from JSON file"""
+        json_path = Path(shortcuts_file)
         if not json_path.exists():
-            raise FileNotFoundError(f"Shortcuts file not found: {self.shortcuts_file}")
+            raise FileNotFoundError(f"Shortcuts file not found: {shortcuts_file}")
         
         with open(json_path, 'r') as f:
-            return json.load(f)
+            data = json.load(f)
+        
+        self._parse_json_data(data)
     
-    def format_shortcut_for_display(self, shortcut: str, is_chord: bool = False) -> str:
-        """Format shortcut for display with nice symbols"""
-        key_display = {
-            'cmd': '⌘',
-            'alt': '⌥', 
-            'shift': '⇧',
-            'ctrl': '⌃',
-            'fn': 'fn',
-            'tab': 'Tab',
-            'space': 'Space',
-            'return': 'Return',
-            'delete': 'Delete',
-            'forwarddelete': 'Forward Delete',
-            'escape': 'Esc',
-            'left': '←',
-            'right': '→',
-            'up': '↑',
-            'down': '↓',
-            'home': 'Home',
-            'end': 'End',
-            'pageup': 'Page Up',
-            'pagedown': 'Page Down'
+    def _parse_json_data(self, data: Dict):
+        """Parse JSON data into internal structures"""
+        self.tool_name = data.get('name', 'Unknown Tool')
+        self.tool_icon = data.get('icon', '🎮')
+        self.tool_description = data.get('description', '')
+        
+        # Parse categories
+        self.categories = {
+            cat_id: Category(**cat_data) 
+            for cat_id, cat_data in data.get('categories', {}).items()
         }
         
-        # Handle chord shortcuts (e.g., "cmd+k cmd+s")
-        if is_chord or ' ' in shortcut:
-            chord_parts = shortcut.lower().split(' ')
-            formatted_chords = []
-            for chord in chord_parts:
-                parts = chord.split('+')
-                display_parts = []
-                for part in parts:
-                    if part in key_display:
-                        display_parts.append(key_display[part])
-                    elif part.startswith('f') and len(part) > 1 and part[1:].isdigit():
-                        display_parts.append(part.upper())
-                    elif len(part) == 1:
-                        display_parts.append(part.upper())
-                    else:
-                        display_parts.append(part.capitalize())
-                formatted_chords.append(' '.join(display_parts))
-            return '  then  '.join(formatted_chords)
+        # Parse shortcuts
+        self.shortcuts = [
+            Shortcut(**shortcut_data) 
+            for shortcut_data in data.get('shortcuts', [])
+        ]
         
-        # Regular shortcut
+        # Parse practice sets
+        self.practice_sets = {
+            set_id: PracticeSet(**set_data)
+            for set_id, set_data in data.get('practice_sets', {}).items()
+        }
+    
+    def format_shortcut_for_display(self, shortcut: str, is_chord: bool = False) -> str:
+        """Format shortcut for user-friendly display"""
+        if is_chord or ' ' in shortcut:
+            return self._format_chord(shortcut)
+        return self._format_single_shortcut(shortcut)
+    
+    def _format_chord(self, shortcut: str) -> str:
+        """Format chord shortcuts (e.g., 'cmd+k cmd+s')"""
+        chord_parts = shortcut.lower().split(' ')
+        formatted_chords = [
+            self._format_single_shortcut(chord) 
+            for chord in chord_parts
+        ]
+        return '  then  '.join(formatted_chords)
+    
+    def _format_single_shortcut(self, shortcut: str) -> str:
+        """Format a single shortcut combination"""
         parts = shortcut.lower().split('+')
         display_parts = []
         
         for part in parts:
-            if part in key_display:
-                display_parts.append(key_display[part])
+            if part in self.KEY_DISPLAY_MAP:
+                display_parts.append(self.KEY_DISPLAY_MAP[part])
             elif part.startswith('f') and len(part) > 1 and part[1:].isdigit():
                 display_parts.append(part.upper())
             elif len(part) == 1:
@@ -110,135 +179,146 @@ class ShortcutQuiz(TrainerCore):
         
         return ' '.join(display_parts)
     
-    def select_practice_mode(self) -> Tuple[str, List[Dict]]:
-        """Let user choose practice mode and return selected shortcuts"""
+    def select_practice_mode(self) -> Tuple[str, List[Shortcut]]:
+        """Interactive practice mode selection"""
         self.clear_screen()
         self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE MODE")
         
-        self.print_color("Choose your practice mode:", 'CYAN')
-        print()
+        options = self._build_practice_options()
+        choice = self._get_user_choice(options)
         
-        # Show predefined practice sets
-        option_num = 1
+        return self._process_mode_choice(choice, options)
+    
+    def _build_practice_options(self) -> Dict:
+        """Build available practice options"""
         options = {}
+        option_num = 1
         
-        for set_id, set_info in self.practice_sets.items():
-            options[str(option_num)] = (set_id, set_info)
-            
-            # Count shortcuts in this set
-            if set_info.get('shortcut_indices'):
-                count = len(set_info['shortcut_indices'])
-            else:
-                count = len(self.shortcuts)
-            
-            print(f"  {option_num}) {set_info['name']} ({count} shortcuts)")
-            print(f"     ", end="")
-            self.print_color(set_info['description'], 'BLUE')
+        # Add predefined practice sets
+        for set_id, practice_set in self.practice_sets.items():
+            count = self._get_set_count(practice_set)
+            options[str(option_num)] = ('set', set_id, practice_set)
+            self._display_option(option_num, practice_set.name, 
+                               practice_set.description, count)
             option_num += 1
         
-        # Add category-based options
-        print()
-        self.print_color("Or practice by category:", 'MAGENTA')
-        for cat_id, cat_info in self.categories.items():
-            # Count shortcuts in this category
-            count = sum(1 for s in self.shortcuts if s.get('category') == cat_id)
-            if count > 0:
-                options[str(option_num)] = ('category', cat_id)
-                icon = cat_info.get('icon', '📝')
-                print(f"  {option_num}) {icon} {cat_info['name']} ({count} shortcuts)")
-                option_num += 1
+        # Add category options
+        if self.categories:
+            print()
+            self.print_color("Or practice by category:", 'MAGENTA')
+            for cat_id, category in self.categories.items():
+                count = self._get_category_count(cat_id)
+                if count > 0:
+                    options[str(option_num)] = ('category', cat_id, category)
+                    print(f"  {option_num}) {category.icon} {category.name} ({count} shortcuts)")
+                    option_num += 1
         
         # Add random option
         print()
-        options[str(option_num)] = ('random', None)
+        options[str(option_num)] = ('random', None, None)
         print(f"  {option_num}) 🎲 Random Selection (10 shortcuts)")
         
-        print()
-        while True:
-            choice = input(f"Enter choice [1-{option_num}]: ")
-            if choice in options:
-                selection_type, selection_data = options[choice]
-                
-                if selection_type in self.practice_sets:
-                    # Predefined set
-                    set_info = self.practice_sets[selection_type]
-                    if set_info.get('shortcut_indices'):
-                        shortcuts = [self.shortcuts[i] for i in set_info['shortcut_indices']]
-                    else:
-                        shortcuts = self.shortcuts
-                    return selection_type, shortcuts
-                    
-                elif selection_type == 'category':
-                    # Category-based
-                    shortcuts = [s for s in self.shortcuts if s.get('category') == selection_data]
-                    return f"category_{selection_data}", shortcuts
-                    
-                elif selection_type == 'random':
-                    # Random selection
-                    num_random = min(10, len(self.shortcuts))
-                    shortcuts = random.sample(self.shortcuts, num_random)
-                    return "random", shortcuts
-                    
-            self.print_color(f"Invalid choice. Please enter 1-{option_num}.", 'RED')
+        return options
     
-    def practice_shortcut(self, shortcut_data: Dict, number: int, total: int) -> str:
-        """
-        Practice a single shortcut
-        Returns: 'completed', 'skipped', or 'exit'
-        """
+    def _get_set_count(self, practice_set: PracticeSet) -> int:
+        """Get number of shortcuts in a practice set"""
+        if practice_set.shortcut_indices:
+            return len(practice_set.shortcut_indices)
+        return len(self.shortcuts)
+    
+    def _get_category_count(self, cat_id: str) -> int:
+        """Get number of shortcuts in a category"""
+        return sum(1 for s in self.shortcuts if s.category == cat_id)
+    
+    def _display_option(self, num: int, name: str, description: str, count: int):
+        """Display a practice option"""
+        print(f"  {num}) {name} ({count} shortcuts)")
+        print(f"     ", end="")
+        self.print_color(description, 'BLUE')
+    
+    def _get_user_choice(self, options: Dict) -> str:
+        """Get and validate user choice"""
+        max_option = len(options)
+        print()
+        
+        while True:
+            choice = input(f"Enter choice [1-{max_option}]: ")
+            if choice in options:
+                return choice
+            self.print_color(f"Invalid choice. Please enter 1-{max_option}.", 'RED')
+    
+    def _process_mode_choice(self, choice: str, options: Dict) -> Tuple[str, List[Shortcut]]:
+        """Process the selected practice mode"""
+        mode_type, mode_id, mode_data = options[choice]
+        
+        if mode_type == 'set':
+            shortcuts = self._get_set_shortcuts(mode_data)
+            return mode_id, shortcuts
+        elif mode_type == 'category':
+            shortcuts = [s for s in self.shortcuts if s.category == mode_id]
+            return f"category_{mode_id}", shortcuts
+        elif mode_type == 'random':
+            num_random = min(10, len(self.shortcuts))
+            shortcuts = random.sample(self.shortcuts, num_random)
+            return "random", shortcuts
+        
+        return "all", self.shortcuts
+    
+    def _get_set_shortcuts(self, practice_set: PracticeSet) -> List[Shortcut]:
+        """Get shortcuts for a practice set"""
+        if practice_set.shortcut_indices:
+            return [self.shortcuts[i] for i in practice_set.shortcut_indices]
+        return self.shortcuts
+    
+    def practice_shortcut(self, shortcut: Shortcut, number: int, total: int) -> str:
+        """Practice a single shortcut - returns: 'completed', 'skipped', or 'exit'"""
+        self._display_shortcut_prompt(shortcut, number, total)
+        return self._practice_loop(shortcut)
+    
+    def _display_shortcut_prompt(self, shortcut: Shortcut, number: int, total: int):
+        """Display the shortcut practice prompt"""
         self.clear_screen()
         self.clear_capture_file()
-        
-        shortcut = shortcut_data['keys']
-        description = shortcut_data['description']
-        category = shortcut_data.get('category', '')
-        difficulty = shortcut_data.get('difficulty', 1)
-        tips = shortcut_data.get('tips', [])
-        is_chord = shortcut_data.get('is_chord', False)
         
         # Header
         print("=" * 50)
         print(f"{self.tool_name.upper()} PRACTICE {number}/{total}")
         
-        # Show category and difficulty
-        if category and category in self.categories:
-            cat_info = self.categories[category]
-            cat_color = cat_info.get('color', 'BLUE').upper()
-            cat_icon = cat_info.get('icon', '📝')
-            self.print_color(f"{cat_icon} {cat_info['name']}", cat_color)
+        # Category and difficulty
+        if shortcut.category in self.categories:
+            cat = self.categories[shortcut.category]
+            self.print_color(f"{cat.icon} {cat.name}", cat.color.upper())
         
-        # Difficulty stars
-        difficulty_stars = "⭐" * difficulty + "☆" * (3 - difficulty)
+        difficulty_stars = "⭐" * shortcut.difficulty + "☆" * (3 - shortcut.difficulty)
         print(f"Difficulty: {difficulty_stars}")
         print("=" * 50)
         print()
         
+        # Display shortcut
         self.print_color(f"Type this {self.tool_name} shortcut:", 'CYAN')
         print()
-        
-        # Display the shortcut
-        display_keys = self.format_shortcut_for_display(shortcut, is_chord)
+        display_keys = self.format_shortcut_for_display(shortcut.keys, shortcut.is_chord)
         self.print_color(f"    🎯  {display_keys}", 'MAGENTA')
-        print(f"    📝 {description}")
+        print(f"    📝 {shortcut.description}")
         print()
         print("-" * 50)
         
-        # Show tips
-        if tips:
+        # Tips
+        if shortcut.tips:
             print("💡 Tips:")
-            for tip in tips[:2]:  # Show max 2 tips
+            for tip in shortcut.tips[:2]:
                 print(f"  • {tip}")
         
-        # Special instructions for chords
-        if is_chord:
+        if shortcut.is_chord:
             self.print_color("  ⚠️  This is a chord: Press first combo, release, then second", 'YELLOW')
         
         print()
         print("Press ESC to skip, ESC twice to exit")
         print()
-        
-        # Practice loop
-        normalized_expected = self.normalize_keys(shortcut)
+    
+    def _practice_loop(self, shortcut: Shortcut) -> str:
+        """Main practice loop for a shortcut"""
+        normalized_expected = self.normalize_keys(shortcut.keys)
         attempts = 0
         consecutive_escapes = 0
         
@@ -246,8 +326,7 @@ class ShortcutQuiz(TrainerCore):
             keys = self.read_new_keys()
             
             for key in keys:
-                # Check for exit
-                if self.check_for_exit(key, self.exit_keys):
+                if self.check_for_exit(key, self.EXIT_KEYS):
                     consecutive_escapes += 1
                     if consecutive_escapes >= 2:
                         print(f"You typed: {key} - Exiting...")
@@ -258,42 +337,52 @@ class ShortcutQuiz(TrainerCore):
                 consecutive_escapes = 0
                 attempts += 1
                 print(f"You typed: {key}", end="")
-                normalized_key = self.normalize_keys(key)
                 
-                # Check if correct
-                if normalized_key == normalized_expected:
-                    self.print_color(" ✅ Correct!", 'GREEN')
-                    self.stats['attempts'].append(attempts)
-                    
-                    # Update category and difficulty stats
-                    if category in self.stats['by_category']:
-                        self.stats['by_category'][category] += 1
-                    self.stats['by_difficulty'][difficulty] += 1
-                    
-                    # Feedback based on attempts
-                    if attempts == 1:
-                        self.print_color("🎯 Perfect! First try!", 'GREEN')
-                    elif attempts == 2:
-                        self.print_color("👍 Great! Got it on the second try!", 'YELLOW')
-                    else:
-                        print(f"Got it in {attempts} attempts!")
-                    
-                    time.sleep(0.8)
-                    return 'completed'
+                if self.normalize_keys(key) == normalized_expected:
+                    return self._handle_success(shortcut, attempts)
                 else:
-                    # Check if it's a meaningful attempt
-                    if '+' in key or key.lower() in ['space', 'return', 'delete', 'tab', '`'] or key.lower().startswith('f'):
-                        self.print_color(" ❌ Try again", 'RED')
-                        
-                        # Provide hints for common mistakes
-                        if difficulty <= 2 and attempts > 2:
-                            self.provide_hint(normalized_expected, normalized_key)
-                    else:
-                        print()  # Just show single keys without judgment
+                    self._handle_mistake(key, normalized_expected, shortcut.difficulty, attempts)
             
             time.sleep(0.05)
     
-    def provide_hint(self, expected: str, actual: str):
+    def _handle_success(self, shortcut: Shortcut, attempts: int) -> str:
+        """Handle successful shortcut completion"""
+        self.print_color(" ✅ Correct!", 'GREEN')
+        self.stats['attempts'].append(attempts)
+        
+        # Update stats
+        if shortcut.category in self.stats['by_category']:
+            self.stats['by_category'][shortcut.category] += 1
+        self.stats['by_difficulty'][shortcut.difficulty] += 1
+        
+        # Feedback
+        if attempts == 1:
+            self.print_color("🎯 Perfect! First try!", 'GREEN')
+        elif attempts == 2:
+            self.print_color("👍 Great! Got it on the second try!", 'YELLOW')
+        else:
+            print(f"Got it in {attempts} attempts!")
+        
+        time.sleep(0.8)
+        return 'completed'
+    
+    def _handle_mistake(self, key: str, expected: str, difficulty: int, attempts: int):
+        """Handle incorrect attempt"""
+        if self._is_meaningful_attempt(key):
+            self.print_color(" ❌ Try again", 'RED')
+            if difficulty <= 2 and attempts > 2:
+                self._provide_hint(expected, self.normalize_keys(key))
+        else:
+            print()
+    
+    def _is_meaningful_attempt(self, key: str) -> bool:
+        """Check if this was a real attempt vs accidental keypress"""
+        meaningful_keys = ['space', 'return', 'delete', 'tab', '`']
+        return ('+' in key or 
+                key.lower() in meaningful_keys or 
+                key.lower().startswith('f'))
+    
+    def _provide_hint(self, expected: str, actual: str):
         """Provide contextual hints based on the mistake"""
         expected_parts = set(expected.split('+'))
         actual_parts = set(actual.split('+'))
@@ -301,51 +390,70 @@ class ShortcutQuiz(TrainerCore):
         missing = expected_parts - actual_parts
         extra = actual_parts - expected_parts
         
-        if missing:
-            if 'cmd' in missing:
-                print("    💡 Hint: Don't forget the Command key (⌘)")
-            elif 'alt' in missing:
-                print("    💡 Hint: Include the Option/Alt key (⌥)")
-            elif 'shift' in missing:
-                print("    💡 Hint: Add the Shift key (⇧)")
-            elif 'ctrl' in missing:
-                print("    💡 Hint: Use the Control key (⌃)")
-            elif 'fn' in missing:
-                print("    💡 Hint: Hold the fn key")
-        elif extra:
-            if 'ctrl' in extra and 'cmd' in expected_parts:
-                print("    💡 Hint: Use Cmd (⌘) not Ctrl on Mac")
+        hints = {
+            'cmd': "Don't forget the Command key (⌘)",
+            'alt': "Include the Option/Alt key (⌥)",
+            'shift': "Add the Shift key (⇧)",
+            'ctrl': "Use the Control key (⌃)",
+            'fn': "Hold the fn key"
+        }
+        
+        for mod, hint in hints.items():
+            if mod in missing:
+                print(f"    💡 Hint: {hint}")
+                break
+        
+        if 'ctrl' in extra and 'cmd' in expected_parts:
+            print("    💡 Hint: Use Cmd (⌘) not Ctrl on Mac")
     
     def run_quiz(self):
-        """Run the complete quiz session"""
-        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE")
+        """Main quiz execution"""
+        self._display_welcome()
+        mode, selected_shortcuts = self.select_practice_mode()
+        self._prepare_practice(mode, selected_shortcuts)
         
+        # Ensure trainer state
+        self.ensure_trainer_off()
+        input("Press Enter to start...")
+        
+        # Activate trainer
+        self._activate_trainer()
+        
+        # Practice loop
+        for i, shortcut in enumerate(selected_shortcuts, 1):
+            result = self.practice_shortcut(shortcut, i, len(selected_shortcuts))
+            self._update_stats(result)
+            if result == 'exit':
+                print("\n⚠️  Exiting practice...")
+                break
+        
+        # Cleanup
+        self.ensure_trainer_off()
+        self.show_results(selected_shortcuts)
+    
+    def _display_welcome(self):
+        """Display welcome screen"""
+        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE")
         if self.tool_description:
             print(f"{self.tool_description}\n")
-        
-        # Select practice mode
-        mode, selected_shortcuts = self.select_practice_mode()
-        
-        # Show what we're practicing
+    
+    def _prepare_practice(self, mode: str, shortcuts: List[Shortcut]):
+        """Prepare for practice session"""
         self.clear_screen()
         self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE")
         
         mode_display = mode.replace('_', ' ').title()
         self.print_color(f"Mode: {mode_display}", 'MAGENTA')
-        print(f"Shortcuts to practice: {len(selected_shortcuts)}\n")
+        print(f"Shortcuts to practice: {len(shortcuts)}\n")
         
         self.print_color("📋 Instructions:", 'CYAN')
         print("  • The trainer will activate automatically")
         print("  • Type each shortcut exactly as shown")
         print("  • Press ESC to skip a shortcut")
         print("  • Press ESC twice to exit\n")
-        
-        # Ensure trainer is off initially
-        self.ensure_trainer_off()
-        
-        input("Press Enter to start...")
-        
-        # Activate trainer
+    
+    def _activate_trainer(self):
+        """Activate the trainer with error handling"""
         print()
         if not self.ensure_trainer_on():
             self.print_color("⚠️  Could not activate trainer automatically.", 'YELLOW')
@@ -353,65 +461,78 @@ class ShortcutQuiz(TrainerCore):
             input("Press Enter when you see '🔴 Trainer ON'...")
         else:
             time.sleep(0.5)
-        
-        # Practice each shortcut
-        for i, shortcut_data in enumerate(selected_shortcuts, 1):
-            result = self.practice_shortcut(shortcut_data, i, len(selected_shortcuts))
-            
-            if result == 'completed':
-                self.stats['completed'] += 1
-            elif result == 'skipped':
-                self.stats['skipped'] += 1
-            elif result == 'exit':
-                print("\n⚠️  Exiting practice...")
-                break
-        
-        # Deactivate trainer
-        self.ensure_trainer_off()
-        
-        # Show results
-        self.show_results(selected_shortcuts)
     
-    def show_results(self, practiced_shortcuts: List[Dict]):
-        """Show comprehensive practice results"""
+    def _update_stats(self, result: str):
+        """Update statistics based on result"""
+        if result == 'completed':
+            self.stats['completed'] += 1
+        elif result == 'skipped':
+            self.stats['skipped'] += 1
+    
+    def show_results(self, practiced_shortcuts: List[Shortcut]):
+        """Display comprehensive practice results"""
         self.show_header(f"📊 {self.tool_name.upper()} RESULTS")
         
-        total_attempted = self.stats['completed'] + self.stats['skipped']
+        self._display_score(practiced_shortcuts)
+        self._display_performance()
+        self._display_breakdown()
+        self._display_practiced_shortcuts(practiced_shortcuts)
+        self._display_tips()
         
-        # Overall score
-        if self.stats['completed'] == len(practiced_shortcuts):
+        print("\nThe trainer has been turned OFF automatically.")
+        self.print_color(f"Your keyboard is back to normal! {self.tool_icon}", 'GREEN')
+    
+    def _display_score(self, shortcuts: List[Shortcut]):
+        """Display overall score"""
+        if self.stats['completed'] == len(shortcuts):
             self.print_color(f"🎉 PERFECT SCORE! 🎉", 'GREEN')
-            print(f"\nYou mastered all {len(practiced_shortcuts)} {self.tool_name} shortcuts!")
-            if self.tool_name == "VSCode":
-                print("You're ready to code at lightning speed! ⚡")
-            elif self.tool_name == "macOS":
-                print("You're a macOS power user! 🚀")
+            print(f"\nYou mastered all {len(shortcuts)} {self.tool_name} shortcuts!")
+            self._display_achievement_message()
         else:
-            print(f"Completed: {self.stats['completed']}/{len(practiced_shortcuts)}")
+            print(f"Completed: {self.stats['completed']}/{len(shortcuts)}")
             if self.stats['skipped'] > 0:
                 print(f"Skipped: {self.stats['skipped']}")
+    
+    def _display_achievement_message(self):
+        """Display tool-specific achievement message"""
+        messages = {
+            "VSCode": "You're ready to code at lightning speed! ⚡",
+            "macOS": "You're a macOS power user! 🚀",
+            "Chrome": "Browse like a pro! 🌐",
+            "Slack": "Communication master! 💬"
+        }
+        message = messages.get(self.tool_name, "You're a keyboard ninja! 🥷")
+        print(message)
+    
+    def _display_performance(self):
+        """Display performance metrics"""
+        if not self.stats['attempts']:
+            return
         
-        # Performance metrics
-        if self.stats['attempts']:
-            avg_attempts = sum(self.stats['attempts']) / len(self.stats['attempts'])
-            print(f"\nAverage attempts per shortcut: {avg_attempts:.1f}")
-            
-            if avg_attempts < 1.5:
-                self.print_color("🏆 Excellent muscle memory!", 'GREEN')
-            elif avg_attempts < 2.5:
-                self.print_color("👍 Good job! Keep practicing!", 'YELLOW')
-            else:
-                self.print_color("💪 You're learning! Practice makes perfect!", 'CYAN')
+        avg_attempts = sum(self.stats['attempts']) / len(self.stats['attempts'])
+        print(f"\nAverage attempts per shortcut: {avg_attempts:.1f}")
         
+        if avg_attempts < 1.5:
+            self.print_color("🏆 Excellent muscle memory!", 'GREEN')
+        elif avg_attempts < 2.5:
+            self.print_color("👍 Good job! Keep practicing!", 'YELLOW')
+        else:
+            self.print_color("💪 You're learning! Practice makes perfect!", 'CYAN')
+    
+    def _display_breakdown(self):
+        """Display category and difficulty breakdown"""
         # Category breakdown
-        categories_practiced = {cat: count for cat, count in self.stats['by_category'].items() if count > 0}
+        categories_practiced = {
+            cat: count for cat, count in self.stats['by_category'].items() 
+            if count > 0
+        }
+        
         if categories_practiced:
             print("\nBy category:")
             for cat_id, count in categories_practiced.items():
                 if cat_id in self.categories:
-                    cat_info = self.categories[cat_id]
-                    icon = cat_info.get('icon', '📝')
-                    print(f"  {icon} {cat_info['name']}: {count} completed")
+                    cat = self.categories[cat_id]
+                    print(f"  {cat.icon} {cat.name}: {count} completed")
         
         # Difficulty breakdown
         if any(self.stats['by_difficulty'].values()):
@@ -420,83 +541,70 @@ class ShortcutQuiz(TrainerCore):
             for diff, count in self.stats['by_difficulty'].items():
                 if count > 0:
                     print(f"  {diff_names[diff]}: {count} completed")
+    
+    def _display_practiced_shortcuts(self, shortcuts: List[Shortcut]):
+        """Display list of practiced shortcuts"""
+        total_attempted = self.stats['completed'] + self.stats['skipped']
         
-        # Detailed shortcut list
-        if total_attempted > 0:
-            print(f"\nShortcuts practiced:")
-            print("-" * 50)
+        if total_attempted == 0:
+            return
+        
+        print(f"\nShortcuts practiced:")
+        print("-" * 50)
+        
+        for i, shortcut in enumerate(shortcuts[:total_attempted], 1):
+            status = "✅" if i <= self.stats['completed'] else "⭕"
+            color = 'GREEN' if i <= self.stats['completed'] else 'YELLOW'
             
-            for i, shortcut_data in enumerate(practiced_shortcuts[:total_attempted], 1):
-                if i <= self.stats['completed']:
-                    status = "✅"
-                    color = 'GREEN'
-                else:
-                    status = "⭕"
-                    color = 'YELLOW'
-                
-                keys = shortcut_data['keys']
-                desc = shortcut_data['description']
-                display_keys = self.format_shortcut_for_display(keys, shortcut_data.get('is_chord', False))
-                
-                print(f"  {status} ", end="")
-                self.print_color(f"{display_keys:25} - {desc}", color)
-        
-        # Tips for improvement
+            display_keys = self.format_shortcut_for_display(
+                shortcut.keys, 
+                shortcut.is_chord
+            )
+            
+            print(f"  {status} ", end="")
+            self.print_color(f"{display_keys:25} - {shortcut.description}", color)
+    
+    def _display_tips(self):
+        """Display tool-specific tips"""
         print("\n" + "=" * 50)
         self.print_color(f"💡 {self.tool_name} Pro Tips:", 'CYAN')
         
-        if self.tool_name == "VSCode" and self.stats['completed'] > 0:
-            print("• Practice these shortcuts in your actual code")
-            print("• Combine shortcuts for powerful workflows")
-            print("• Customize keybindings: Cmd+K Cmd+S")
-        elif self.tool_name == "macOS" and self.stats['completed'] > 0:
-            print("• Use these shortcuts in your daily workflow")
-            print("• Most shortcuts work across all Mac apps")
-            print("• Explore app-specific shortcuts in Help menu")
+        tips = {
+            "VSCode": [
+                "• Practice these shortcuts in your actual code",
+                "• Combine shortcuts for powerful workflows",
+                "• Customize keybindings: Cmd+K Cmd+S"
+            ],
+            "macOS": [
+                "• Use these shortcuts in your daily workflow",
+                "• Most shortcuts work across all Mac apps",
+                "• Explore app-specific shortcuts in Help menu"
+            ]
+        }
         
-        print("\nThe trainer has been turned OFF automatically.")
-        self.print_color(f"Your keyboard is back to normal! {self.tool_icon}", 'GREEN')
+        default_tips = [
+            "• Practice daily for muscle memory",
+            "• Start with easy shortcuts first",
+            "• Use shortcuts in real work"
+        ]
+        
+        for tip in tips.get(self.tool_name, default_tips):
+            print(tip)
 
 
 def main():
-    """Main entry point for running a quiz"""
+    """Main entry point for standalone execution"""
     import sys
     
-    # Determine which quiz to run based on command line args or let user choose
+    # Get shortcuts file from command line or let user choose
     if len(sys.argv) > 1:
         shortcuts_file = sys.argv[1]
     else:
-        # List available shortcut files
-        shortcut_files = list(Path('.').glob('shortcuts_*.json'))
-        
-        if not shortcut_files:
-            print("❌ No shortcut files found!")
-            print("Create shortcuts_*.json files to use this system.")
-            sys.exit(1)
-        
-        print("Available tools to practice:")
-        for i, file in enumerate(shortcut_files, 1):
-            # Load just the name from the file
-            with open(file, 'r') as f:
-                data = json.load(f)
-                name = data.get('name', file.stem)
-                icon = data.get('icon', '🎮')
-                desc = data.get('description', '')
-                print(f"  {i}) {icon} {name}")
-                if desc:
-                    print(f"     {desc}")
-        
-        print()
-        while True:
-            choice = input(f"Select tool [1-{len(shortcut_files)}]: ")
-            try:
-                idx = int(choice) - 1
-                if 0 <= idx < len(shortcut_files):
-                    shortcuts_file = str(shortcut_files[idx])
-                    break
-            except ValueError:
-                pass
-            print("Invalid choice. Please try again.")
+        shortcuts_file = select_shortcuts_file()
+    
+    if not shortcuts_file:
+        print("No shortcuts file selected. Exiting.")
+        sys.exit(1)
     
     # Run the quiz
     try:
@@ -511,7 +619,44 @@ def main():
         sys.exit(1)
     except Exception as e:
         print(f"❌ Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
+
+
+def select_shortcuts_file() -> Optional[str]:
+    """Interactive file selection"""
+    shortcut_files = list(Path('.').glob('shortcuts_*.json'))
+    
+    if not shortcut_files:
+        print("❌ No shortcut files found!")
+        print("Create shortcuts_*.json files to use this system.")
+        return None
+    
+    print("Available tools to practice:")
+    for i, file in enumerate(shortcut_files, 1):
+        try:
+            with open(file, 'r') as f:
+                data = json.load(f)
+                name = data.get('name', file.stem)
+                icon = data.get('icon', '🎮')
+                desc = data.get('description', '')
+                print(f"  {i}) {icon} {name}")
+                if desc:
+                    print(f"     {desc}")
+        except:
+            print(f"  {i}) {file.name}")
+    
+    print()
+    while True:
+        choice = input(f"Select tool [1-{len(shortcut_files)}]: ")
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(shortcut_files):
+                return str(shortcut_files[idx])
+        except ValueError:
+            pass
+        print("Invalid choice. Please try again.")
 
 
 if __name__ == "__main__":

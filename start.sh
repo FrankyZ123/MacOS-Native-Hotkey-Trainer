@@ -30,7 +30,7 @@ if [ ! -f "./build/key-interceptor" ]; then
         echo "  • setup.sh"
         echo "  • trainer_core.py"
         echo "  • viewer.py"
-        echo "  • quiz.py"
+        echo "  • quiz_system.py"
         echo "  • launcher.py"
         exit 1
     fi
@@ -43,8 +43,8 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Check for required Python files
-required_files=("trainer_core.py" "viewer.py" "quiz.py" "launcher.py")
+# Check for required Python files (updated for refactored structure)
+required_files=("trainer_core.py" "viewer.py" "quiz_system.py" "launcher.py")
 missing=false
 
 for file in "${required_files[@]}"; do
