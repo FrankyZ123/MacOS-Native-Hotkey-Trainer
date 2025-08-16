@@ -1,0 +1,489 @@
+{
+    "name": "Gmail",
+    "description": "Gmail keyboard shortcuts for power users",
+    "icon": "📧",
+    "version": "1.0.0",
+    "categories": {
+      "navigation": {
+        "name": "Navigation",
+        "color": "blue",
+        "icon": "🧭"
+      },
+      "compose": {
+        "name": "Compose & Reply",
+        "color": "green",
+        "icon": "✍️"
+      },
+      "actions": {
+        "name": "Email Actions",
+        "color": "yellow",
+        "icon": "⚡"
+      },
+      "selection": {
+        "name": "Selection & Bulk",
+        "color": "magenta",
+        "icon": "☑️"
+      },
+      "formatting": {
+        "name": "Text Formatting",
+        "color": "cyan",
+        "icon": "🎨"
+      },
+      "advanced": {
+        "name": "Advanced",
+        "color": "red",
+        "icon": "🚀"
+      }
+    },
+    "shortcuts": [
+      {
+        "keys": "c",
+        "description": "Compose new email",
+        "category": "compose",
+        "difficulty": 1,
+        "tips": ["Opens compose window", "Most used Gmail shortcut"]
+      },
+      {
+        "keys": "r",
+        "description": "Reply to email",
+        "category": "compose",
+        "difficulty": 1,
+        "tips": ["Reply to current email", "Focus must be on an email"]
+      },
+      {
+        "keys": "a",
+        "description": "Reply all",
+        "category": "compose",
+        "difficulty": 1,
+        "tips": ["Reply to all recipients", "Careful with company-wide emails!"]
+      },
+      {
+        "keys": "f",
+        "description": "Forward email",
+        "category": "compose",
+        "difficulty": 1,
+        "tips": ["Forward current email", "Opens forward dialog"]
+      },
+      {
+        "keys": "shift+r",
+        "description": "Reply in new window",
+        "category": "compose",
+        "difficulty": 2,
+        "tips": ["Opens reply in popup", "Useful for referencing other emails"]
+      },
+      {
+        "keys": "cmd+return",
+        "description": "Send email",
+        "category": "compose",
+        "difficulty": 1,
+        "tips": ["Send composed email", "Works from compose window"]
+      },
+      {
+        "keys": "cmd+shift+c",
+        "description": "Add CC recipients",
+        "category": "compose",
+        "difficulty": 2,
+        "tips": ["Show CC field", "In compose window"]
+      },
+      {
+        "keys": "cmd+shift+b",
+        "description": "Add BCC recipients",
+        "category": "compose",
+        "difficulty": 2,
+        "tips": ["Show BCC field", "Hidden recipients"]
+      },
+      {
+        "keys": "j",
+        "description": "Go to next email/conversation",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Move down in list", "Vim-style navigation"]
+      },
+      {
+        "keys": "k",
+        "description": "Go to previous email/conversation",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Move up in list", "Vim-style navigation"]
+      },
+      {
+        "keys": "o",
+        "description": "Open email/conversation",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Open selected email", "Also expands conversations"]
+      },
+      {
+        "keys": "return",
+        "description": "Open email in conversation",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Open selected message", "Works in conversation view"]
+      },
+      {
+        "keys": "u",
+        "description": "Return to inbox/list",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Go back to list view", "Exit conversation"]
+      },
+      {
+        "keys": "g i",
+        "description": "Go to Inbox",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Type 'g' then 'i'", "Quick inbox access"],
+        "is_chord": true
+      },
+      {
+        "keys": "g s",
+        "description": "Go to Starred",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Type 'g' then 's'", "View starred emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "g t",
+        "description": "Go to Sent",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Type 'g' then 't'", "View sent emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "g d",
+        "description": "Go to Drafts",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Type 'g' then 'd'", "View draft emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "g a",
+        "description": "Go to All Mail",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Type 'g' then 'a'", "View all emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "/",
+        "description": "Search mail",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Focus search box", "Start typing to search"]
+      },
+      {
+        "keys": "?",
+        "description": "Show keyboard shortcuts help",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Opens shortcuts reference", "Shift+/ on most keyboards"]
+      },
+      {
+        "keys": "e",
+        "description": "Archive email",
+        "category": "actions",
+        "difficulty": 1,
+        "tips": ["Remove from inbox", "Can be undone with 'z'"]
+      },
+      {
+        "keys": "#",
+        "description": "Delete email",
+        "category": "actions",
+        "difficulty": 1,
+        "tips": ["Move to trash", "Shift+3 on most keyboards"]
+      },
+      {
+        "keys": "!",
+        "description": "Mark as spam",
+        "category": "actions",
+        "difficulty": 2,
+        "tips": ["Report spam", "Shift+1 on most keyboards"]
+      },
+      {
+        "keys": "s",
+        "description": "Star/unstar email",
+        "category": "actions",
+        "difficulty": 1,
+        "tips": ["Toggle star", "Mark important emails"]
+      },
+      {
+        "keys": "shift+i",
+        "description": "Mark as read",
+        "category": "actions",
+        "difficulty": 1,
+        "tips": ["Mark selected as read", "Works with multiple selection"]
+      },
+      {
+        "keys": "shift+u",
+        "description": "Mark as unread",
+        "category": "actions",
+        "difficulty": 1,
+        "tips": ["Mark selected as unread", "Useful for reminders"]
+      },
+      {
+        "keys": "m",
+        "description": "Mute conversation",
+        "category": "actions",
+        "difficulty": 2,
+        "tips": ["Archive and ignore future replies", "Great for noisy threads"]
+      },
+      {
+        "keys": "l",
+        "description": "Label email",
+        "category": "actions",
+        "difficulty": 2,
+        "tips": ["Open label menu", "Organize your emails"]
+      },
+      {
+        "keys": "v",
+        "description": "Move to folder",
+        "category": "actions",
+        "difficulty": 2,
+        "tips": ["Move to different folder", "Opens folder list"]
+      },
+      {
+        "keys": "z",
+        "description": "Undo last action",
+        "category": "actions",
+        "difficulty": 1,
+        "tips": ["Undo previous action", "Life saver!"]
+      },
+      {
+        "keys": ".",
+        "description": "More actions menu",
+        "category": "actions",
+        "difficulty": 2,
+        "tips": ["Opens more actions", "Additional options"]
+      },
+      {
+        "keys": "x",
+        "description": "Select conversation",
+        "category": "selection",
+        "difficulty": 1,
+        "tips": ["Toggle selection", "For bulk actions"]
+      },
+      {
+        "keys": "*+a",
+        "description": "Select all conversations",
+        "category": "selection",
+        "difficulty": 2,
+        "tips": ["Type * then a", "Select all visible"],
+        "is_chord": true
+      },
+      {
+        "keys": "*+n",
+        "description": "Deselect all",
+        "category": "selection",
+        "difficulty": 2,
+        "tips": ["Type * then n", "Clear selection"],
+        "is_chord": true
+      },
+      {
+        "keys": "*+r",
+        "description": "Select all read",
+        "category": "selection",
+        "difficulty": 2,
+        "tips": ["Type * then r", "Select read emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "*+u",
+        "description": "Select all unread",
+        "category": "selection",
+        "difficulty": 2,
+        "tips": ["Type * then u", "Select unread emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "*+s",
+        "description": "Select all starred",
+        "category": "selection",
+        "difficulty": 2,
+        "tips": ["Type * then s", "Select starred emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "*+t",
+        "description": "Select all unstarred",
+        "category": "selection",
+        "difficulty": 2,
+        "tips": ["Type * then t", "Select unstarred emails"],
+        "is_chord": true
+      },
+      {
+        "keys": "cmd+b",
+        "description": "Bold text",
+        "category": "formatting",
+        "difficulty": 1,
+        "tips": ["Bold selected text", "In compose window"]
+      },
+      {
+        "keys": "cmd+i",
+        "description": "Italic text",
+        "category": "formatting",
+        "difficulty": 1,
+        "tips": ["Italicize selected text", "In compose window"]
+      },
+      {
+        "keys": "cmd+u",
+        "description": "Underline text",
+        "category": "formatting",
+        "difficulty": 1,
+        "tips": ["Underline selected text", "In compose window"]
+      },
+      {
+        "keys": "cmd+shift+7",
+        "description": "Numbered list",
+        "category": "formatting",
+        "difficulty": 2,
+        "tips": ["Create numbered list", "In compose window"]
+      },
+      {
+        "keys": "cmd+shift+8",
+        "description": "Bulleted list",
+        "category": "formatting",
+        "difficulty": 2,
+        "tips": ["Create bullet list", "In compose window"]
+      },
+      {
+        "keys": "cmd+k",
+        "description": "Insert link",
+        "category": "formatting",
+        "difficulty": 2,
+        "tips": ["Add hyperlink", "Select text first"]
+      },
+      {
+        "keys": "cmd+shift+l",
+        "description": "Align left",
+        "category": "formatting",
+        "difficulty": 2,
+        "tips": ["Left align text", "In compose window"]
+      },
+      {
+        "keys": "cmd+shift+e",
+        "description": "Align center",
+        "category": "formatting",
+        "difficulty": 2,
+        "tips": ["Center align text", "In compose window"]
+      },
+      {
+        "keys": "cmd+shift+r",
+        "description": "Align right",
+        "category": "formatting",
+        "difficulty": 2,
+        "tips": ["Right align text", "In compose window"]
+      },
+      {
+        "keys": "n",
+        "description": "Next message in conversation",
+        "category": "advanced",
+        "difficulty": 2,
+        "tips": ["Navigate within thread", "In conversation view"]
+      },
+      {
+        "keys": "p",
+        "description": "Previous message in conversation",
+        "category": "advanced",
+        "difficulty": 2,
+        "tips": ["Navigate within thread", "In conversation view"]
+      },
+      {
+        "keys": "shift+n",
+        "description": "Update conversation",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Jump to new messages", "In long threads"]
+      },
+      {
+        "keys": "shift+escape",
+        "description": "Focus main window",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Exit compose/chat", "Return to inbox"]
+      },
+      {
+        "keys": "]",
+        "description": "Remove from current view & go to next",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Archive and next", "Efficient inbox processing"]
+      },
+      {
+        "keys": "[",
+        "description": "Remove from current view & go to previous",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Archive and previous", "Process emails backwards"]
+      },
+      {
+        "keys": "cmd+shift+d",
+        "description": "Discard draft",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Delete draft", "In compose window"]
+      },
+      {
+        "keys": "tab return",
+        "description": "Send & archive",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Send then archive thread", "Keep inbox clean"],
+        "is_chord": true
+      }
+    ],
+    "practice_sets": {
+      "beginner": {
+        "name": "Gmail Beginner",
+        "description": "Essential email navigation and actions",
+        "shortcut_indices": [0, 1, 2, 3, 8, 9, 10, 12, 18, 20, 23, 29]
+      },
+      "compose_master": {
+        "name": "Compose Master",
+        "description": "Master email composition",
+        "shortcut_indices": [0, 1, 2, 3, 4, 5, 6, 7, 38, 39, 40, 44]
+      },
+      "navigation_pro": {
+        "name": "Navigation Pro",
+        "description": "Navigate Gmail like a pro",
+        "shortcut_indices": [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 48, 49]
+      },
+      "email_actions": {
+        "name": "Email Actions",
+        "description": "Quick email management actions",
+        "shortcut_indices": [20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
+      },
+      "bulk_operations": {
+        "name": "Bulk Operations",
+        "description": "Select and manage multiple emails",
+        "shortcut_indices": [31, 32, 33, 34, 35, 36, 37]
+      },
+      "formatting_pro": {
+        "name": "Formatting Pro",
+        "description": "Text formatting in compose",
+        "shortcut_indices": [38, 39, 40, 41, 42, 43, 44, 45, 46]
+      },
+      "power_user": {
+        "name": "Power User",
+        "description": "Advanced Gmail shortcuts",
+        "shortcut_indices": [47, 48, 49, 50, 51, 52, 53, 54]
+      },
+      "quick_20": {
+        "name": "Quick 20",
+        "description": "Top 20 most useful Gmail shortcuts",
+        "shortcut_indices": [0, 1, 2, 3, 5, 8, 9, 10, 12, 13, 18, 20, 21, 23, 24, 25, 29, 31, 38, 39]
+      },
+      "inbox_zero": {
+        "name": "Inbox Zero Workflow",
+        "description": "Process emails efficiently",
+        "shortcut_indices": [8, 9, 10, 12, 20, 23, 24, 25, 27, 29, 51, 52, 54]
+      },
+      "all": {
+        "name": "All Gmail Shortcuts",
+        "description": "Practice all 55 Gmail shortcuts",
+        "shortcut_indices": null
+      }
+    }
+  }
