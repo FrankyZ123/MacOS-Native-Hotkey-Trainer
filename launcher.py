@@ -40,21 +40,71 @@ class TrainerLauncher(TrainerCore):
     
     VERSION = "2.0"
     REQUIRED_FILES = ['viewer.py', 'quiz_system.py', 'trainer_core.py']
+    TOOLS_DIR = Path('tools')  # Define tools directory
     
     def __init__(self):
         super().__init__()
         self.interceptor = InterceptorManager()
         self.running = True
         self.tools = []
+        self._ensure_tools_directory()
         self._load_tools()
     
+    def _ensure_tools_directory(self):
+        """Create tools directory if it doesn't exist"""
+        if not self.TOOLS_DIR.exists():
+            self.TOOLS_DIR.mkdir(parents=True, exist_ok=True)
+            self.print_color(f"📁 Created '{self.TOOLS_DIR}' directory for tool configurations", 'GREEN')
+    
     def _load_tools(self):
-        """Load available tools from JSON files"""
+        """Load available tools from JSON files in tools directory"""
         self.tools = []
-        for json_file in sorted(Path('.').glob('shortcuts_*.json')):
+        
+        # First check tools directory
+        json_files = list(self.TOOLS_DIR.glob('shortcuts_*.json'))
+        
+        # If no files in tools dir, check for files in current directory (for migration)
+        legacy_files = []
+        if not json_files:
+            legacy_files = list(Path('.').glob('shortcuts_*.json'))
+            if legacy_files:
+                self._offer_migration(legacy_files)
+                # Reload from tools directory after migration
+                json_files = list(self.TOOLS_DIR.glob('shortcuts_*.json'))
+        
+        # Parse found files
+        for json_file in sorted(json_files):
             tool = self._parse_tool_file(json_file)
             if tool:
                 self.tools.append(tool)
+    
+    def _offer_migration(self, legacy_files: List[Path]):
+        """Offer to migrate JSON files to tools directory"""
+        self.print_color("\n📦 Found tool files in the main directory!", 'YELLOW')
+        print(f"Would you like to move them to the '{self.TOOLS_DIR}' folder for better organization?")
+        print("\nFiles found:")
+        for file in legacy_files:
+            print(f"  • {file.name}")
+        
+        choice = input("\nMove files to tools folder? (y/n): ")
+        if choice.lower() == 'y':
+            self._migrate_files(legacy_files)
+    
+    def _migrate_files(self, files: List[Path]):
+        """Move JSON files to tools directory"""
+        import shutil
+        
+        self.print_color("\n🚀 Migrating files...", 'CYAN')
+        for file in files:
+            try:
+                dest = self.TOOLS_DIR / file.name
+                shutil.move(str(file), str(dest))
+                print(f"  ✅ Moved {file.name}")
+            except Exception as e:
+                print(f"  ❌ Failed to move {file.name}: {e}")
+        
+        self.print_color("\n✨ Migration complete!", 'GREEN')
+        time.sleep(1)
     
     def _parse_tool_file(self, json_file: Path) -> Optional[Tool]:
         """Parse a tool configuration file"""
@@ -86,7 +136,7 @@ class TrainerLauncher(TrainerCore):
         
         # Check for shortcut files
         if not self.tools:
-            issues.append("No shortcut files found (shortcuts_*.json)")
+            issues.append(f"No shortcut files found in '{self.TOOLS_DIR}' directory (shortcuts_*.json)")
         
         if issues:
             self._display_issues(issues)
@@ -148,6 +198,8 @@ class TrainerLauncher(TrainerCore):
                       "Check/restart interceptor", self.check_interceptor_status),
             MenuOption('add_tool', "➕ Add New Tool", 
                       "Create shortcuts for a new tool", self.create_new_tool),
+            MenuOption('open_tools', "📂 Open Tools Folder", 
+                      "Open the tools folder in Finder", self.open_tools_folder),
             MenuOption('exit', "❌ Exit", "", self.exit_launcher)
         ]
         
@@ -204,6 +256,13 @@ class TrainerLauncher(TrainerCore):
         print()
         choice = input(f"Enter choice [1-{max_option}]: ")
         return choice if choice in options else None
+    
+    def open_tools_folder(self):
+        """Open the tools folder in Finder"""
+        self.print_color(f"\n📂 Opening '{self.TOOLS_DIR}' folder...", 'CYAN')
+        subprocess.run(['open', str(self.TOOLS_DIR.absolute())])
+        print(f"You can add or edit JSON files here.")
+        print(f"Files should be named: shortcuts_[toolname].json")
     
     def run_viewer(self):
         """Launch the real-time key viewer"""
@@ -356,6 +415,9 @@ class TrainerLauncher(TrainerCore):
             print(f"\n📚 {len(self.tools)} tool(s) available for practice:")
             for tool in self.tools:
                 print(f"   {tool.icon} {tool.name} ({tool.shortcut_count} shortcuts)")
+        else:
+            self.print_color(f"\n📂 No tools found in '{self.TOOLS_DIR}' folder", 'YELLOW')
+            print("Add shortcuts_*.json files to get started!")
         print()
     
     def _main_loop(self):
@@ -398,7 +460,7 @@ class ToolCreator:
         print("-" * 30)
         
         print("\nThis will help you create a shortcuts JSON file for a new tool.")
-        print("You can also manually create a shortcuts_[toolname].json file.\n")
+        print(f"The file will be saved in the '{self.launcher.TOOLS_DIR}' folder.\n")
         
         # Gather information
         tool_info = self._gather_tool_info()
@@ -461,23 +523,27 @@ class ToolCreator:
         }
     
     def _save_template(self, template: Dict, tool_name: str) -> Optional[str]:
-        """Save template to file"""
+        """Save template to file in tools directory"""
+        # Ensure tools directory exists
+        self.launcher.TOOLS_DIR.mkdir(parents=True, exist_ok=True)
+        
         filename = f"shortcuts_{tool_name.lower().replace(' ', '_')}.json"
+        filepath = self.launcher.TOOLS_DIR / filename
         
         try:
-            with open(filename, 'w') as f:
+            with open(filepath, 'w') as f:
                 json.dump(template, f, indent=2)
-            return filename
+            return str(filepath)
         except Exception as e:
             self.launcher.print_color(f"❌ Error creating file: {e}", 'RED')
             return None
     
-    def _display_success(self, filename: str):
+    def _display_success(self, filepath: str):
         """Display success message and next steps"""
-        self.launcher.print_color(f"\n✅ Created {filename}", 'GREEN')
+        self.launcher.print_color(f"\n✅ Created {filepath}", 'GREEN')
         print("\nNext steps:")
-        print(f"1. Edit {filename} to add your shortcuts")
-        print("2. Restart the launcher to see your new tool")
+        print(f"1. Edit the file to add your shortcuts")
+        print("2. The tool will appear in the menu automatically")
         print("\nExample shortcut format:")
         print('''  {
     "keys": "cmd+shift+p",
@@ -486,6 +552,7 @@ class ToolCreator:
     "difficulty": 1,
     "tips": ["Opens command palette", "Search for any command"]
   }''')
+        print(f"\nYou can also open the tools folder from the main menu.")
 
 
 def main():

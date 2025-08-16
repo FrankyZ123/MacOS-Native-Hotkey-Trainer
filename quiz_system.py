@@ -43,7 +43,7 @@ class Category:
     """Category information"""
     name: str
     color: str = "blue"
-    icon: str = "📁"
+    icon: str = "🔑"
 
 
 @dataclass
@@ -81,6 +81,7 @@ class ShortcutQuiz(TrainerCore):
     }
     
     EXIT_KEYS = ['escape', 'esc', 'ctrl+c', 'cmd+q', 'cmd+.']
+    TOOLS_DIR = Path('tools')  # Define tools directory
     
     def __init__(self, shortcuts_file: str = None):
         """Initialize quiz with optional shortcuts file"""
@@ -115,6 +116,13 @@ class ShortcutQuiz(TrainerCore):
     def load_from_file(self, shortcuts_file: str):
         """Load shortcuts configuration from JSON file"""
         json_path = Path(shortcuts_file)
+        
+        # If the path doesn't exist, check in tools directory
+        if not json_path.exists() and not json_path.is_absolute():
+            tools_path = self.TOOLS_DIR / json_path
+            if tools_path.exists():
+                json_path = tools_path
+        
         if not json_path.exists():
             raise FileNotFoundError(f"Shortcuts file not found: {shortcuts_file}")
         
@@ -499,7 +507,8 @@ class ShortcutQuiz(TrainerCore):
             "VSCode": "You're ready to code at lightning speed! ⚡",
             "macOS": "You're a macOS power user! 🚀",
             "Chrome": "Browse like a pro! 🌐",
-            "Slack": "Communication master! 💬"
+            "Slack": "Communication master! 💬",
+            "Asana": "Project management ninja! 📊"
         }
         message = messages.get(self.tool_name, "You're a keyboard ninja! 🥷")
         print(message)
@@ -579,6 +588,11 @@ class ShortcutQuiz(TrainerCore):
                 "• Use these shortcuts in your daily workflow",
                 "• Most shortcuts work across all Mac apps",
                 "• Explore app-specific shortcuts in Help menu"
+            ],
+            "Asana": [
+                "• Use Tab+N to quickly create tasks",
+                "• J and K navigate like Vim",
+                "• Tab+numbers switch between views"
             ]
         }
         
@@ -626,11 +640,18 @@ def main():
 
 def select_shortcuts_file() -> Optional[str]:
     """Interactive file selection"""
-    shortcut_files = list(Path('.').glob('shortcuts_*.json'))
+    tools_dir = Path('tools')
+    
+    # Look for JSON files in tools directory
+    if tools_dir.exists():
+        shortcut_files = list(tools_dir.glob('shortcuts_*.json'))
+    else:
+        # Fallback to current directory for backwards compatibility
+        shortcut_files = list(Path('.').glob('shortcuts_*.json'))
     
     if not shortcut_files:
         print("❌ No shortcut files found!")
-        print("Create shortcuts_*.json files to use this system.")
+        print(f"Create shortcuts_*.json files in the '{tools_dir}' directory to use this system.")
         return None
     
     print("Available tools to practice:")

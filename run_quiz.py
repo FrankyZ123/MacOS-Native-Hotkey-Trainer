@@ -13,6 +13,9 @@ from quiz_system import ShortcutQuiz, select_shortcuts_file
 def run_tool_quiz(tool_name: str = None):
     """Run quiz for a specific tool or let user choose"""
     
+    # Define tools directory
+    TOOLS_DIR = Path('tools')
+    
     # Map common tool names to their JSON files
     tool_map = {
         'vscode': 'shortcuts_vscode.json',
@@ -26,16 +29,34 @@ def run_tool_quiz(tool_name: str = None):
     shortcuts_file = None
     
     if tool_name and tool_name.lower() in tool_map:
-        shortcuts_file = tool_map[tool_name.lower()]
-        if not Path(shortcuts_file).exists():
-            print(f"❌ {shortcuts_file} not found!")
+        # Check in tools directory first
+        tools_file = TOOLS_DIR / tool_map[tool_name.lower()]
+        if tools_file.exists():
+            shortcuts_file = str(tools_file)
+        # Fallback to current directory for backwards compatibility
+        elif Path(tool_map[tool_name.lower()]).exists():
+            shortcuts_file = tool_map[tool_name.lower()]
+        else:
+            print(f"❌ {tool_map[tool_name.lower()]} not found!")
             shortcuts_file = None
+            
     elif len(sys.argv) > 1:
         # Check if a file was passed as argument
-        if Path(sys.argv[1]).exists():
-            shortcuts_file = sys.argv[1]
+        arg_path = Path(sys.argv[1])
+        
+        # Check if it's a full path
+        if arg_path.exists():
+            shortcuts_file = str(arg_path)
+        # Check in tools directory
+        elif (TOOLS_DIR / arg_path).exists():
+            shortcuts_file = str(TOOLS_DIR / arg_path)
+        # Check if it's a tool name
         elif sys.argv[1].lower() in tool_map:
-            shortcuts_file = tool_map[sys.argv[1].lower()]
+            tools_file = TOOLS_DIR / tool_map[sys.argv[1].lower()]
+            if tools_file.exists():
+                shortcuts_file = str(tools_file)
+            elif Path(tool_map[sys.argv[1].lower()]).exists():
+                shortcuts_file = tool_map[sys.argv[1].lower()]
     
     # If no file determined, let user choose
     if not shortcuts_file:
