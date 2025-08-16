@@ -84,11 +84,17 @@ class TrainerCore:
         return False
     
     def clear_capture_file(self):
-        """Clear the capture file and reset position"""
+        """Clear the capture file by moving read position to end of file"""
+        # Don't truncate the file since Swift has it open for writing
+        # Instead, just move our read position to the current end of file
         if self.capture_file.exists():
-            with open(self.capture_file, 'w') as f:
-                f.write("")
-        self.last_position = 0
+            try:
+                # Get the current file size to skip existing content
+                self.last_position = self.capture_file.stat().st_size
+            except (IOError, OSError):
+                self.last_position = 0
+        else:
+            self.last_position = 0
     
     def read_new_keys(self) -> List[str]:
         """Read any new keys from capture file"""
