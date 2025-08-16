@@ -46,6 +46,22 @@ class KeyInterceptor {
         41: ";", 39: "'", 43: ",", 47: ".", 44: "/", 50: "`"
     ]
     
+    // Map page navigation keys back to arrow keys when fn is detected
+    // This handles keyboards that send pageup/pagedown/home/end instead of arrows with fn
+    private let fnRemapping: [Int: String] = [
+        116: "up",      // pageup -> up
+        121: "down",    // pagedown -> down
+        115: "left",    // home -> left
+        119: "right"    // end -> right
+    ]
+    
+    // Keys that should ignore the fn modifier when pressed alone
+    // (Arrow keys often send fn flag on some Mac keyboards)
+    private let ignoreFnForKeys: Set<Int> = [
+        123, 124, 125, 126,  // Arrow keys
+        115, 119, 116, 121   // home, end, pageup, pagedown
+    ]
+    
     // Modifier-only keycodes (for detecting solo modifier presses)
     private let modifierKeyCodes: Set<Int64> = [
         54, 55,  // Cmd (right, left)
@@ -135,15 +151,38 @@ class KeyInterceptor {
         // Build the key combination string
         var parts: [String] = []
         
+        // Get the base key name
+        var keyName = getKeyName(for: Int(keyCode), event: event)
+        
+        // Check if we should skip the fn modifier
+        var shouldSkipFn = false
+        
+        // Case 1: Arrow keys (123-126) with fn flag should ignore fn
+        let arrowKeyCodes: Set<Int> = [123, 124, 125, 126]
+        if arrowKeyCodes.contains(Int(keyCode)) && flags.contains(.maskSecondaryFn) {
+            shouldSkipFn = true
+        }
+        
+        // Case 2: Page navigation keys with fn that should be remapped to arrows
+        if flags.contains(.maskSecondaryFn) {
+            if let remapped = fnRemapping[Int(keyCode)] {
+                keyName = remapped
+                shouldSkipFn = true
+            }
+        }
+        
         // Add modifiers in consistent order
         if flags.contains(.maskControl) { parts.append("ctrl") }
         if flags.contains(.maskAlternate) { parts.append("alt") }
         if flags.contains(.maskShift) { parts.append("shift") }
         if flags.contains(.maskCommand) { parts.append("cmd") }
-        if flags.contains(.maskSecondaryFn) { parts.append("fn") }
+        
+        // Only add fn if we're not skipping it
+        if flags.contains(.maskSecondaryFn) && !shouldSkipFn {
+            parts.append("fn")
+        }
         
         // Add the main key
-        let keyName = getKeyName(for: Int(keyCode), event: event)
         parts.append(keyName)
         
         // Write the combination

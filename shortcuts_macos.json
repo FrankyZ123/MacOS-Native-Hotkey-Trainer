@@ -1,0 +1,157 @@
+{
+    "name": "macOS",
+    "description": "Essential macOS keyboard shortcuts",
+    "icon": "🍎",
+    "version": "1.0.0",
+    "categories": {
+      "basic": {
+        "name": "Basic Operations",
+        "color": "green",
+        "icon": "🟢"
+      },
+      "file_management": {
+        "name": "File Management",
+        "color": "blue",
+        "icon": "📁"
+      },
+      "system": {
+        "name": "System Controls",
+        "color": "yellow",
+        "icon": "⚙️"
+      },
+      "productivity": {
+        "name": "Productivity",
+        "color": "magenta",
+        "icon": "🚀"
+      }
+    },
+    "shortcuts": [
+      {
+        "keys": "cmd+n",
+        "description": "New window/file",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Universal shortcut across most apps", "Works in Finder to create new window"]
+      },
+      {
+        "keys": "shift+cmd+n",
+        "description": "New folder",
+        "category": "file_management",
+        "difficulty": 1,
+        "tips": ["Works in Finder", "Creates folder in current directory"]
+      },
+      {
+        "keys": "space",
+        "description": "Quick Look/Play",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Select a file and press Space to preview", "Works with most file types"]
+      },
+      {
+        "keys": "cmd+delete",
+        "description": "Delete line/Move to trash",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["In text editors: deletes entire line", "In Finder: moves to trash"]
+      },
+      {
+        "keys": "shift+cmd+.",
+        "description": "Show hidden files",
+        "category": "file_management",
+        "difficulty": 2,
+        "tips": ["Toggle hidden files in Finder", "Useful for accessing system files"]
+      },
+      {
+        "keys": "cmd+w",
+        "description": "Close tab/window",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Closes current tab or window", "Add Shift to close all windows"]
+      },
+      {
+        "keys": "alt+cmd+escape",
+        "description": "Force quit applications",
+        "category": "system",
+        "difficulty": 2,
+        "tips": ["Opens force quit dialog", "Useful when apps freeze"]
+      },
+      {
+        "keys": "shift+cmd+3",
+        "description": "Screenshot entire screen",
+        "category": "productivity",
+        "difficulty": 1,
+        "tips": ["Saves to desktop by default", "Add Control to copy to clipboard"]
+      },
+      {
+        "keys": "shift+cmd+4",
+        "description": "Screenshot selection",
+        "category": "productivity",
+        "difficulty": 1,
+        "tips": ["Drag to select area", "Press Space to capture window"]
+      },
+      {
+        "keys": "shift+cmd+5",
+        "description": "Screenshot/recording options",
+        "category": "productivity",
+        "difficulty": 2,
+        "tips": ["Opens screenshot toolbar", "Can record screen or take timed shots"]
+      },
+      {
+        "keys": "ctrl+cmd+space",
+        "description": "Emoji & symbols picker",
+        "category": "productivity",
+        "difficulty": 2,
+        "tips": ["Quick emoji access", "Also includes special characters"]
+      },
+      {
+        "keys": "shift+cmd+/",
+        "description": "Help menu search",
+        "category": "system",
+        "difficulty": 3,
+        "tips": ["Search menu items in any app", "Great for finding hidden features"]
+      },
+      {
+        "keys": "cmd+space",
+        "description": "Spotlight search",
+        "category": "system",
+        "difficulty": 1,
+        "tips": ["System-wide search", "Can do calculations and conversions"]
+      },
+      {
+        "keys": "cmd+tab",
+        "description": "Switch between apps",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Hold Cmd and tap Tab to cycle", "Add Shift to go backwards"]
+      },
+      {
+        "keys": "cmd+`",
+        "description": "Switch between windows of same app",
+        "category": "basic",
+        "difficulty": 2,
+        "tips": ["Cycles through app windows", "That's the backtick key"]
+      }
+    ],
+    "practice_sets": {
+      "beginner": {
+        "name": "Beginner Essentials",
+        "description": "Start with these fundamental shortcuts",
+        "shortcut_indices": [0, 2, 5, 7, 12, 13]
+      },
+      "file_master": {
+        "name": "File Management Master",
+        "description": "Master Finder and file operations",
+        "shortcut_indices": [0, 1, 2, 3, 4, 5]
+      },
+      "power_user": {
+        "name": "Power User Pack",
+        "description": "Advanced productivity shortcuts",
+        "shortcut_indices": [6, 9, 10, 11, 14]
+      },
+      "quick_10": {
+        "name": "Quick 10",
+        "description": "Top 10 most useful shortcuts",
+        "shortcut_indices": [0, 1, 2, 3, 4, 5, 6, 7, 10, 12]
+      }
+    }
+  }

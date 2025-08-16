@@ -1,0 +1,31 @@
+{
+  "name": "'Asana'",
+  "description": "",
+  "icon": "\ud83d\udce5",
+  "version": "1.0.0",
+  "categories": {
+    "basic": {
+      "name": "Basic",
+      "color": "green",
+      "icon": "\ud83d\udfe2"
+    }
+  },
+  "shortcuts": [
+    {
+      "keys": "cmd+n",
+      "description": "Example shortcut - replace this",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": [
+        "Replace this with actual shortcuts"
+      ]
+    }
+  ],
+  "practice_sets": {
+    "all": {
+      "name": "All Shortcuts",
+      "description": "Practice all shortcuts",
+      "shortcut_indices": null
+    }
+  }
+}

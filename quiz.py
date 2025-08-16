@@ -33,6 +33,42 @@ class HotkeyQuiz(TrainerCore):
             'attempts': []
         }
     
+    def format_shortcut_for_display(self, shortcut: str) -> str:
+        """Format shortcut for learn mode display"""
+        # Map technical notation to display symbols
+        key_display = {
+            'cmd': '⌘',
+            'alt': '⌥', 
+            'shift': '⇧',
+            'ctrl': '⌃',
+            'fn': 'fn',
+            'tab': 'Tab',
+            'space': 'Space',
+            'return': 'Return',
+            'delete': 'Delete',
+            'escape': 'Esc',
+            'left': '←',
+            'right': '→',
+            'up': '↑',
+            'down': '↓',
+        }
+        
+        parts = shortcut.lower().split('+')
+        display_parts = []
+        
+        for part in parts:
+            if part in key_display:
+                display_parts.append(key_display[part])
+            elif len(part) == 1:
+                # Single character or symbol
+                display_parts.append(part.upper())
+            else:
+                # Keep as is but capitalize
+                display_parts.append(part.capitalize())
+        
+        # Join with spaces, no plus signs
+        return ' '.join(display_parts)
+    
     def practice_shortcut(self, shortcut: str, description: str, number: int, total: int) -> str:
         """
         Practice a single shortcut
@@ -47,7 +83,10 @@ class HotkeyQuiz(TrainerCore):
         print()
         self.print_color(f"Type this shortcut:", 'CYAN')
         print()
-        self.print_color(f"    🎯  {shortcut.upper()}", 'MAGENTA')
+        
+        # Convert shortcut to display format
+        display_keys = self.format_shortcut_for_display(shortcut)
+        self.print_color(f"    🎯  {display_keys}", 'MAGENTA')
         print(f"    ({description})")
         print()
         print("-" * 50)
@@ -98,7 +137,7 @@ class HotkeyQuiz(TrainerCore):
         self.show_header("🎮 HOTKEY PRACTICE QUIZ")
         
         print("This will test you on 10 common macOS shortcuts.\n")
-        self.print_color("📝 Instructions:", 'CYAN')
+        self.print_color("📋 Instructions:", 'CYAN')
         print("  • The trainer will activate automatically")
         print("  • Type each shortcut as shown")
         print("  • Press ESC to skip a shortcut")
@@ -165,8 +204,10 @@ class HotkeyQuiz(TrainerCore):
                 status = "⭕"
                 color = 'YELLOW'
             
+            # Format shortcut for display
+            display_keys = self.format_shortcut_for_display(shortcut)
             print(f"  {status} ", end="")
-            self.print_color(f"{shortcut.upper():20} - {description}", color)
+            self.print_color(f"{display_keys:20} - {description}", color)
         
         print("\nThe trainer has been turned OFF automatically.")
         self.print_color("Your keyboard is back to normal! 🎮", 'GREEN')

@@ -1,0 +1,295 @@
+{
+    "name": "VSCode",
+    "description": "Visual Studio Code keyboard shortcuts for Mac",
+    "icon": "💻",
+    "version": "1.0.0",
+    "categories": {
+      "editing": {
+        "name": "Basic Editing",
+        "color": "green",
+        "icon": "✏️"
+      },
+      "multi_cursor": {
+        "name": "Multi-cursor & Selection",
+        "color": "magenta",
+        "icon": "🎯"
+      },
+      "navigation": {
+        "name": "Navigation",
+        "color": "blue",
+        "icon": "🧭"
+      },
+      "code": {
+        "name": "Code Operations",
+        "color": "yellow",
+        "icon": "⚡"
+      },
+      "advanced": {
+        "name": "Advanced Features",
+        "color": "red",
+        "icon": "🚀"
+      },
+      "interface": {
+        "name": "Interface Control",
+        "color": "cyan",
+        "icon": "🖥️"
+      }
+    },
+    "shortcuts": [
+      {
+        "keys": "cmd+x",
+        "description": "Cut line (empty selection)",
+        "category": "editing",
+        "difficulty": 1,
+        "tips": ["Cuts entire line when nothing selected", "Great for moving lines quickly"]
+      },
+      {
+        "keys": "cmd+c",
+        "description": "Copy line (empty selection)",
+        "category": "editing",
+        "difficulty": 1,
+        "tips": ["Copies entire line when nothing selected", "Faster than selecting the line first"]
+      },
+      {
+        "keys": "alt+up",
+        "description": "Move line up",
+        "category": "editing",
+        "difficulty": 1,
+        "tips": ["Moves current line or selection up", "Works with multiple lines selected"]
+      },
+      {
+        "keys": "alt+down",
+        "description": "Move line down",
+        "category": "editing",
+        "difficulty": 1,
+        "tips": ["Moves current line or selection down", "Maintains indentation"]
+      },
+      {
+        "keys": "shift+alt+down",
+        "description": "Copy line down",
+        "category": "editing",
+        "difficulty": 1,
+        "tips": ["Duplicates current line below", "Works with selections too"]
+      },
+      {
+        "keys": "shift+alt+up",
+        "description": "Copy line up",
+        "category": "editing",
+        "difficulty": 1,
+        "tips": ["Duplicates current line above", "Great for repeating patterns"]
+      },
+      {
+        "keys": "cmd+d",
+        "description": "Add selection to next find match",
+        "category": "multi_cursor",
+        "difficulty": 2,
+        "tips": ["Select word, then Cmd+D to select next occurrence", "Essential for renaming variables"]
+      },
+      {
+        "keys": "cmd+shift+l",
+        "description": "Select all occurrences",
+        "category": "multi_cursor",
+        "difficulty": 2,
+        "tips": ["Selects all instances of current selection", "Creates multiple cursors instantly"]
+      },
+      {
+        "keys": "alt+cmd+down",
+        "description": "Insert cursor below",
+        "category": "multi_cursor",
+        "difficulty": 2,
+        "tips": ["Adds cursor to line below", "Great for editing multiple lines"]
+      },
+      {
+        "keys": "alt+cmd+up",
+        "description": "Insert cursor above",
+        "category": "multi_cursor",
+        "difficulty": 2,
+        "tips": ["Adds cursor to line above", "Combine with down for column editing"]
+      },
+      {
+        "keys": "cmd+p",
+        "description": "Quick open file",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Fuzzy file search", "Type @ for symbols, : for line numbers"]
+      },
+      {
+        "keys": "cmd+shift+p",
+        "description": "Command palette",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Access all VSCode commands", "Start typing to filter commands"]
+      },
+      {
+        "keys": "ctrl+g",
+        "description": "Go to line number",
+        "category": "navigation",
+        "difficulty": 1,
+        "tips": ["Jump to specific line", "Type line:column for precise positioning"]
+      },
+      {
+        "keys": "cmd+shift+o",
+        "description": "Go to symbol in file",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Navigate to functions/classes", "Type : to group by category"]
+      },
+      {
+        "keys": "cmd+t",
+        "description": "Go to symbol in workspace",
+        "category": "navigation",
+        "difficulty": 2,
+        "tips": ["Search symbols across all files", "Great for finding functions"]
+      },
+      {
+        "keys": "cmd+/",
+        "description": "Toggle line comment",
+        "category": "code",
+        "difficulty": 1,
+        "tips": ["Comments/uncomments selected lines", "Works with any language"]
+      },
+      {
+        "keys": "shift+alt+a",
+        "description": "Toggle block comment",
+        "category": "code",
+        "difficulty": 2,
+        "tips": ["Creates block comments", "Useful for multi-line documentation"]
+      },
+      {
+        "keys": "cmd+]",
+        "description": "Indent line",
+        "category": "code",
+        "difficulty": 1,
+        "tips": ["Indents current line or selection", "Tab also works for this"]
+      },
+      {
+        "keys": "cmd+[",
+        "description": "Outdent line",
+        "category": "code",
+        "difficulty": 1,
+        "tips": ["Removes indentation", "Shift+Tab also works"]
+      },
+      {
+        "keys": "shift+alt+f",
+        "description": "Format document",
+        "category": "code",
+        "difficulty": 2,
+        "tips": ["Auto-formats entire file", "Uses configured formatter"]
+      },
+      {
+        "keys": "fn+f12",
+        "description": "Go to definition",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Jump to where item is defined", "Cmd+Click also works"]
+      },
+      {
+        "keys": "alt+fn+f12",
+        "description": "Peek definition",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Shows definition inline", "No need to leave current file"]
+      },
+      {
+        "keys": "shift+fn+f12",
+        "description": "Show references",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Find all references to symbol", "Shows in peek widget"]
+      },
+      {
+        "keys": "fn+f2",
+        "description": "Rename symbol",
+        "category": "advanced",
+        "difficulty": 3,
+        "tips": ["Intelligently rename across files", "Safer than find/replace"]
+      },
+      {
+        "keys": "cmd+.",
+        "description": "Quick fix/suggestions",
+        "category": "advanced",
+        "difficulty": 2,
+        "tips": ["Shows available code actions", "Auto-import, fix errors, refactor"]
+      },
+      {
+        "keys": "cmd+k cmd+s",
+        "description": "Keyboard shortcuts settings",
+        "category": "interface",
+        "difficulty": 2,
+        "tips": ["This is a chord: Cmd+K, release, then Cmd+S", "Customize all keybindings"],
+        "is_chord": true
+      },
+      {
+        "keys": "ctrl+`",
+        "description": "Toggle integrated terminal",
+        "category": "interface",
+        "difficulty": 1,
+        "tips": ["Shows/hides terminal", "Backtick key (same as tilde ~)"]
+      },
+      {
+        "keys": "cmd+b",
+        "description": "Toggle sidebar",
+        "category": "interface",
+        "difficulty": 1,
+        "tips": ["More space for code", "Quickly access when needed"]
+      },
+      {
+        "keys": "cmd+shift+e",
+        "description": "Show Explorer",
+        "category": "interface",
+        "difficulty": 1,
+        "tips": ["Opens file explorer sidebar", "Navigate project structure"]
+      },
+      {
+        "keys": "cmd+shift+f",
+        "description": "Search in files",
+        "category": "interface",
+        "difficulty": 1,
+        "tips": ["Search across entire project", "Supports regex and replace"]
+      },
+      {
+        "keys": "cmd+shift+x",
+        "description": "Show Extensions",
+        "category": "interface",
+        "difficulty": 1,
+        "tips": ["Browse and install extensions", "Enhance VSCode functionality"]
+      }
+    ],
+    "practice_sets": {
+      "beginner": {
+        "name": "VSCode Beginner",
+        "description": "Essential editing and navigation",
+        "shortcut_indices": [0, 1, 2, 3, 10, 11, 15, 26, 27]
+      },
+      "multi_cursor_master": {
+        "name": "Multi-Cursor Master",
+        "description": "Master multi-cursor editing",
+        "shortcut_indices": [6, 7, 8, 9]
+      },
+      "navigation_pro": {
+        "name": "Navigation Pro",
+        "description": "Navigate code like a pro",
+        "shortcut_indices": [10, 11, 12, 13, 14, 28, 29]
+      },
+      "code_editing": {
+        "name": "Code Editing Power",
+        "description": "Powerful code editing shortcuts",
+        "shortcut_indices": [0, 1, 2, 3, 4, 5, 15, 16, 17, 18, 19]
+      },
+      "advanced_features": {
+        "name": "Advanced Features",
+        "description": "IntelliSense and refactoring",
+        "shortcut_indices": [20, 21, 22, 23, 24]
+      },
+      "quick_15": {
+        "name": "Quick 15",
+        "description": "Top 15 most useful VSCode shortcuts",
+        "shortcut_indices": [0, 1, 2, 3, 4, 6, 10, 11, 15, 19, 20, 24, 26, 27, 29]
+      },
+      "full_30": {
+        "name": "Complete VSCode",
+        "description": "All 30+ shortcuts",
+        "shortcut_indices": null
+      }
+    }
+  }
