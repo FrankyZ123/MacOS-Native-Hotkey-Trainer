@@ -38,8 +38,8 @@ class MenuOption:
 class TrainerLauncher(TrainerCore):
     """Main launcher for HotKey Trainer"""
     
-    VERSION = "2.0"
-    REQUIRED_FILES = ['viewer.py', 'quiz_system.py', 'trainer_core.py', 'typing_test.py']
+    VERSION = "2.1"
+    REQUIRED_FILES = ['viewer.py', 'quiz_system.py', 'trainer_core.py']
     TOOLS_DIR = Path('tools')
     
     def __init__(self):
@@ -61,17 +61,18 @@ class TrainerLauncher(TrainerCore):
         """Load available tools from JSON files in tools directory"""
         self.tools = []
         
-        # First check tools directory
-        json_files = list(self.TOOLS_DIR.glob('shortcuts_*.json'))
+        # First check tools directory for any .json files
+        json_files = list(self.TOOLS_DIR.glob('*.json'))
         
-        # If no files in tools dir, check for files in current directory (for migration)
+        # If no files in tools dir, check for legacy files
         legacy_files = []
         if not json_files:
+            # Check for old naming convention
             legacy_files = list(Path('.').glob('shortcuts_*.json'))
             if legacy_files:
                 self._offer_migration(legacy_files)
                 # Reload from tools directory after migration
-                json_files = list(self.TOOLS_DIR.glob('shortcuts_*.json'))
+                json_files = list(self.TOOLS_DIR.glob('*.json'))
         
         # Parse found files
         for json_file in sorted(json_files):
@@ -80,27 +81,30 @@ class TrainerLauncher(TrainerCore):
                 self.tools.append(tool)
     
     def _offer_migration(self, legacy_files: List[Path]):
-        """Offer to migrate JSON files to tools directory"""
-        self.print_color("\n📦 Found tool files in the main directory!", 'YELLOW')
-        print(f"Would you like to move them to the '{self.TOOLS_DIR}' folder for better organization?")
+        """Offer to migrate JSON files to tools directory with new naming"""
+        self.print_color("\n📦 Found legacy tool files!", 'YELLOW')
+        print(f"Would you like to move them to the '{self.TOOLS_DIR}' folder with simplified names?")
         print("\nFiles found:")
         for file in legacy_files:
-            print(f"  • {file.name}")
+            new_name = file.name.replace('shortcuts_', '')
+            print(f"  • {file.name} → {new_name}")
         
-        choice = input("\nMove files to tools folder? (y/n): ")
+        choice = input("\nMigrate files? (y/n): ")
         if choice.lower() == 'y':
             self._migrate_files(legacy_files)
     
     def _migrate_files(self, files: List[Path]):
-        """Move JSON files to tools directory"""
+        """Move JSON files to tools directory with new naming"""
         import shutil
         
         self.print_color("\n🚀 Migrating files...", 'CYAN')
         for file in files:
             try:
-                dest = self.TOOLS_DIR / file.name
+                # Remove 'shortcuts_' prefix if present
+                new_name = file.name.replace('shortcuts_', '')
+                dest = self.TOOLS_DIR / new_name
                 shutil.move(str(file), str(dest))
-                print(f"  ✅ Moved {file.name}")
+                print(f"  ✅ Moved {file.name} → {new_name}")
             except Exception as e:
                 print(f"  ❌ Failed to move {file.name}: {e}")
         
@@ -154,13 +158,12 @@ class TrainerLauncher(TrainerCore):
         print("Choose an option:")
         print()
         print("  1) 🎯 Select Tool to Practice")
-        print("  2) ⌨️  Typing Test")
-        print("  3) ⚙️  Settings")
-        print("  4) ❌ Exit")
+        print("  2) ⚙️  Settings & Utilities")
+        print("  3) ❌ Exit")
         print()
         
-        choice = input("Enter choice [1-4]: ")
-        return choice if choice in ['1', '2', '3', '4'] else None
+        choice = input("Enter choice [1-3]: ")
+        return choice if choice in ['1', '2', '3'] else None
     
     def display_tools_menu(self) -> Optional[str]:
         """Display tool selection menu"""
@@ -168,7 +171,8 @@ class TrainerLauncher(TrainerCore):
         
         if not self.tools:
             self.print_color("📂 No tools found!", 'YELLOW')
-            print(f"Add shortcuts_*.json files to '{self.TOOLS_DIR}' directory")
+            print(f"Add .json files to '{self.TOOLS_DIR}' directory")
+            print("\nExample: asana.json, vscode.json, chrome.json")
             print()
             print("  0) ← Back to Main Menu")
             print()
@@ -204,9 +208,9 @@ class TrainerLauncher(TrainerCore):
     
     def display_settings_menu(self) -> Optional[str]:
         """Display settings menu"""
-        self.show_header("⚙️ SETTINGS")
+        self.show_header("⚙️ SETTINGS & UTILITIES")
         
-        print("Tools & Utilities:")
+        print("Available utilities:")
         print()
         print("  1) 👁️ Real-time Key Viewer")
         print("     See what keys you're pressing")
@@ -243,12 +247,9 @@ class TrainerLauncher(TrainerCore):
             # Go to tools menu
             self.current_menu = 'tools'
         elif choice == '2':
-            # Run typing test
-            self.run_typing_test()
-        elif choice == '3':
             # Go to settings menu
             self.current_menu = 'settings'
-        elif choice == '4':
+        elif choice == '3':
             # Exit
             self.exit_launcher()
     
@@ -281,19 +282,12 @@ class TrainerLauncher(TrainerCore):
         elif choice == '5':
             self.open_tools_folder()
     
-    def run_typing_test(self):
-        """Launch the typing test"""
-        self.print_color("\n⌨️ Starting Typing Test...", 'GREEN')
-        print("The trainer will activate automatically")
-        time.sleep(1)
-        subprocess.run([sys.executable, "typing_test.py"])
-    
     def open_tools_folder(self):
         """Open the tools folder in Finder"""
         self.print_color(f"\n📂 Opening '{self.TOOLS_DIR}' folder...", 'CYAN')
         subprocess.run(['open', str(self.TOOLS_DIR.absolute())])
         print(f"You can add or edit JSON files here.")
-        print(f"Files should be named: shortcuts_[toolname].json")
+        print(f"Files should be named: [toolname].json (e.g., asana.json, vscode.json)")
     
     def run_viewer(self):
         """Launch the real-time key viewer"""
@@ -567,7 +561,8 @@ class ToolCreator:
         # Ensure tools directory exists
         self.launcher.TOOLS_DIR.mkdir(parents=True, exist_ok=True)
         
-        filename = f"shortcuts_{tool_name.lower().replace(' ', '_')}.json"
+        # Use simple naming: toolname.json
+        filename = f"{tool_name.lower().replace(' ', '_')}.json"
         filepath = self.launcher.TOOLS_DIR / filename
         
         try:

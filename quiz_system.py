@@ -43,7 +43,7 @@ class Category:
     """Category information"""
     name: str
     color: str = "blue"
-    icon: str = "🔑"
+    icon: str = "📋"
 
 
 @dataclass
@@ -677,16 +677,20 @@ def select_shortcuts_file() -> Optional[str]:
     """Interactive file selection"""
     tools_dir = Path('tools')
     
-    # Look for JSON files in tools directory
+    # Look for JSON files in tools directory (new naming convention)
     if tools_dir.exists():
-        shortcut_files = list(tools_dir.glob('shortcuts_*.json'))
+        shortcut_files = list(tools_dir.glob('*.json'))
     else:
         # Fallback to current directory for backwards compatibility
-        shortcut_files = list(Path('.').glob('shortcuts_*.json'))
+        shortcut_files = list(Path('.').glob('*.json'))
+        # Also check for old naming convention
+        if not shortcut_files:
+            shortcut_files = list(Path('.').glob('shortcuts_*.json'))
     
     if not shortcut_files:
         print("❌ No shortcut files found!")
-        print(f"Create shortcuts_*.json files in the '{tools_dir}' directory to use this system.")
+        print(f"Create .json files in the '{tools_dir}' directory to use this system.")
+        print("Example: asana.json, vscode.json, chrome.json")
         return None
     
     print("Available tools to practice:")

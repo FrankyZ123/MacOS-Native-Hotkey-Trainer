@@ -43,7 +43,7 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Check for required Python files (updated for refactored structure)
+# Check for required Python files (updated - removed typing_test.py)
 required_files=("trainer_core.py" "viewer.py" "quiz_system.py" "launcher.py")
 missing=false
 

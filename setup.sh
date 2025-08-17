@@ -100,9 +100,9 @@ build_interceptor() {
 check_python_files() {
     print_status "Checking Python components..."
     
-    # Updated for refactored structure
+    # Updated for refactored structure (removed typing_test.py)
     required_files=("trainer_core.py" "viewer.py" "quiz_system.py" "launcher.py")
-    optional_files=("run_quiz.py")
+    optional_files=("run_quiz.py" "migrate_tools.py")
     missing_files=()
     
     for file in "${required_files[@]}"; do
@@ -218,7 +218,7 @@ if ! command -v python3 &> /dev/null; then
     exit 1
 fi
 
-# Check for required Python files (updated for refactored structure)
+# Check for required Python files (updated - removed typing_test.py)
 required_files=("trainer_core.py" "viewer.py" "quiz_system.py" "launcher.py")
 missing=false
 

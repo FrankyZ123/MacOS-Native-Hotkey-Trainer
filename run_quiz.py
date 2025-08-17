@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Simple wrapper to run quiz for specific tools
-This replaces quiz.py, quiz_vscode.py, etc.
+Works with new naming convention (tool.json instead of shortcuts_tool.json)
 """
 
 import sys
@@ -16,8 +16,17 @@ def run_tool_quiz(tool_name: str = None):
     # Define tools directory
     TOOLS_DIR = Path('tools')
     
-    # Map common tool names to their JSON files
+    # Map common tool names to their JSON files (new naming)
     tool_map = {
+        'vscode': 'vscode.json',
+        'macos': 'macos.json',
+        'asana': 'asana.json',
+        'chrome': 'chrome.json',
+        'slack': 'slack.json',
+    }
+    
+    # Also support legacy naming for backwards compatibility
+    legacy_map = {
         'vscode': 'shortcuts_vscode.json',
         'macos': 'shortcuts_macos.json',
         'asana': 'shortcuts_asana.json',
@@ -29,15 +38,21 @@ def run_tool_quiz(tool_name: str = None):
     shortcuts_file = None
     
     if tool_name and tool_name.lower() in tool_map:
-        # Check in tools directory first
+        # Try new naming first
         tools_file = TOOLS_DIR / tool_map[tool_name.lower()]
         if tools_file.exists():
             shortcuts_file = str(tools_file)
+        # Try legacy naming in tools dir
+        elif (TOOLS_DIR / legacy_map[tool_name.lower()]).exists():
+            shortcuts_file = str(TOOLS_DIR / legacy_map[tool_name.lower()])
         # Fallback to current directory for backwards compatibility
         elif Path(tool_map[tool_name.lower()]).exists():
             shortcuts_file = tool_map[tool_name.lower()]
+        elif Path(legacy_map[tool_name.lower()]).exists():
+            shortcuts_file = legacy_map[tool_name.lower()]
         else:
             print(f"❌ {tool_map[tool_name.lower()]} not found!")
+            print(f"Please ensure the file exists in the 'tools' directory")
             shortcuts_file = None
             
     elif len(sys.argv) > 1:
@@ -52,11 +67,17 @@ def run_tool_quiz(tool_name: str = None):
             shortcuts_file = str(TOOLS_DIR / arg_path)
         # Check if it's a tool name
         elif sys.argv[1].lower() in tool_map:
+            # Try new naming
             tools_file = TOOLS_DIR / tool_map[sys.argv[1].lower()]
             if tools_file.exists():
                 shortcuts_file = str(tools_file)
+            # Try legacy naming
+            elif (TOOLS_DIR / legacy_map[sys.argv[1].lower()]).exists():
+                shortcuts_file = str(TOOLS_DIR / legacy_map[sys.argv[1].lower()])
             elif Path(tool_map[sys.argv[1].lower()]).exists():
                 shortcuts_file = tool_map[sys.argv[1].lower()]
+            elif Path(legacy_map[sys.argv[1].lower()]).exists():
+                shortcuts_file = legacy_map[sys.argv[1].lower()]
     
     # If no file determined, let user choose
     if not shortcuts_file:
@@ -84,7 +105,7 @@ if __name__ == "__main__":
     # Usage: python run_quiz.py [tool_name or json_file]
     # Examples:
     #   python run_quiz.py vscode
-    #   python run_quiz.py shortcuts_custom.json
+    #   python run_quiz.py asana.json
     #   python run_quiz.py  (interactive selection)
     
     run_tool_quiz()
