@@ -80,7 +80,9 @@ class ShortcutQuiz(TrainerCore):
         'pagedown': 'Page Down'
     }
     
-    EXIT_KEYS = ['escape', 'esc', 'ctrl+c', 'cmd+q', 'cmd+.']
+    # Changed: Use backtick for skip/exit instead of ESC
+    SKIP_EXIT_KEYS = ['`', 'backtick', 'grave']  # Backtick key for skip/exit
+    EMERGENCY_EXIT_KEYS = ['ctrl+c', 'cmd+q', 'cmd+.']  # Keep these for emergency exit
     TOOLS_DIR = Path('tools')  # Define tools directory
     
     def __init__(self, shortcuts_file: str = None):
@@ -93,6 +95,17 @@ class ShortcutQuiz(TrainerCore):
             self._initialize_empty()
             
         self._reset_stats()
+    
+    def check_for_exit(self, key: str, exit_keys: Optional[List[str]] = None) -> bool:
+        """
+        Override parent's check_for_exit to NOT treat ESC as an exit key.
+        Only check for the specific exit keys passed in.
+        """
+        if exit_keys is None:
+            return False
+        
+        normalized = self.normalize_keys(key)
+        return normalized in [self.normalize_keys(k) for k in exit_keys]
     
     def _initialize_empty(self):
         """Initialize with empty data"""
@@ -321,28 +334,47 @@ class ShortcutQuiz(TrainerCore):
             self.print_color("  ⚠️  This is a chord: Press first combo, release, then second", 'YELLOW')
         
         print()
-        print("Press ESC to skip, ESC twice to exit")
+        # Updated instructions for backtick
+        self.print_color("Press ` (backtick) to skip, `` (twice) to exit", 'YELLOW')
         print()
     
     def _practice_loop(self, shortcut: Shortcut) -> str:
         """Main practice loop for a shortcut"""
         normalized_expected = self.normalize_keys(shortcut.keys)
         attempts = 0
-        consecutive_escapes = 0
+        consecutive_backticks = 0
+        last_backtick_time = 0
         
         while True:
             keys = self.read_new_keys()
             
             for key in keys:
-                if self.check_for_exit(key, self.EXIT_KEYS):
-                    consecutive_escapes += 1
-                    if consecutive_escapes >= 2:
-                        print(f"You typed: {key} - Exiting...")
+                key_lower = key.lower()
+                
+                # Check for backtick (skip/exit key)
+                if key_lower in self.SKIP_EXIT_KEYS or key == '`':
+                    current_time = time.time()
+                    # Reset counter if more than 1 second has passed
+                    if current_time - last_backtick_time > 1.0:
+                        consecutive_backticks = 0
+                    
+                    consecutive_backticks += 1
+                    last_backtick_time = current_time
+                    
+                    if consecutive_backticks >= 2:
+                        print(f"You typed: ` (backtick) twice - Exiting...")
                         return 'exit'
-                    print(f"You typed: {key} - Skipping...")
+                    print(f"You typed: ` (backtick) - Skipping...")
                     return 'skipped'
                 
-                consecutive_escapes = 0
+                # Check for emergency exit keys (but NOT escape!)
+                normalized_key = self.normalize_keys(key)
+                if normalized_key in ['ctrl+c', 'cmd+q', 'cmd+.']:
+                    print(f"You typed: {key} - Emergency exit...")
+                    return 'exit'
+                
+                # Reset backtick counter for non-backtick keys
+                consecutive_backticks = 0
                 attempts += 1
                 print(f"You typed: {key}", end="")
                 
@@ -385,7 +417,8 @@ class ShortcutQuiz(TrainerCore):
     
     def _is_meaningful_attempt(self, key: str) -> bool:
         """Check if this was a real attempt vs accidental keypress"""
-        meaningful_keys = ['space', 'return', 'delete', 'tab', '`']
+        # Don't count backtick as meaningful since it's our skip key
+        meaningful_keys = ['space', 'return', 'delete', 'tab']
         return ('+' in key or 
                 key.lower() in meaningful_keys or 
                 key.lower().startswith('f'))
@@ -457,8 +490,10 @@ class ShortcutQuiz(TrainerCore):
         self.print_color("📋 Instructions:", 'CYAN')
         print("  • The trainer will activate automatically")
         print("  • Type each shortcut exactly as shown")
-        print("  • Press ESC to skip a shortcut")
-        print("  • Press ESC twice to exit\n")
+        # Updated instructions
+        self.print_color("  • Press ` (backtick) to skip a shortcut", 'YELLOW')
+        self.print_color("  • Press `` (backtick twice) to exit", 'YELLOW')
+        print("  • Ctrl+C for emergency exit\n")
     
     def _activate_trainer(self):
         """Activate the trainer with error handling"""
