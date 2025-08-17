@@ -22,6 +22,12 @@ class Difficulty(Enum):
     HARD = 3
 
 
+class PracticeMode(Enum):
+    """Practice mode types"""
+    PRACTICE = "practice"  # Shows shortcut upfront
+    QUIZ = "quiz"  # User has to recall shortcut
+
+
 @dataclass
 class Shortcut:
     """Data class for a keyboard shortcut"""
@@ -43,7 +49,7 @@ class Category:
     """Category information"""
     name: str
     color: str = "blue"
-    icon: str = "🔋"
+    icon: str = "📋"
 
 
 @dataclass
@@ -85,6 +91,7 @@ class ShortcutQuiz(TrainerCore):
     
     # Changed: Use backtick for skip/exit instead of ESC
     SKIP_EXIT_KEYS = ['`', 'backtick', 'grave']  # Backtick key for skip/exit
+    HINT_KEYS = ['h']  # 'h' key for hints in quiz mode
     EMERGENCY_EXIT_KEYS = ['ctrl+c', 'cmd+q', 'cmd+.']  # Keep these for emergency exit
     TOOLS_DIR = Path('tools')  # Define tools directory
     
@@ -98,6 +105,7 @@ class ShortcutQuiz(TrainerCore):
             self._initialize_empty()
             
         self._reset_stats()
+        self.practice_mode = PracticeMode.PRACTICE  # Default mode
     
     def check_for_exit(self, key: str, exit_keys: Optional[List[str]] = None) -> bool:
         """
@@ -124,6 +132,7 @@ class ShortcutQuiz(TrainerCore):
         self.stats = {
             'completed': 0,
             'skipped': 0,
+            'hints_used': 0,
             'attempts': [],
             'by_category': {cat_id: 0 for cat_id in self.categories},
             'by_difficulty': {d.value: 0 for d in Difficulty}
@@ -208,10 +217,32 @@ class ShortcutQuiz(TrainerCore):
         parts = self.normalize_keys(key).split('+')
         return all(part in self.MODIFIER_KEYS for part in parts)
     
+    def select_mode(self) -> PracticeMode:
+        """Let user choose between Practice and Quiz mode"""
+        self.clear_screen()
+        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} - SELECT MODE")
+        
+        print("Choose your training mode:\n")
+        
+        self.print_color("  1) 📖 Practice Mode", 'CYAN')
+        print("     Shows shortcuts upfront - good for learning\n")
+        
+        self.print_color("  2) 🧠 Quiz Mode", 'MAGENTA')
+        print("     Tests your memory - guess shortcuts from descriptions\n")
+        
+        while True:
+            choice = input("Enter choice [1-2]: ")
+            if choice == '1':
+                return PracticeMode.PRACTICE
+            elif choice == '2':
+                return PracticeMode.QUIZ
+            self.print_color("Invalid choice. Please enter 1 or 2.", 'RED')
+    
     def select_practice_mode(self) -> Tuple[str, List[Shortcut]]:
         """Interactive practice mode selection"""
         self.clear_screen()
-        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE MODE")
+        mode_name = "PRACTICE" if self.practice_mode == PracticeMode.PRACTICE else "QUIZ"
+        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} {mode_name} - SELECT SHORTCUTS")
         
         options = self._build_practice_options()
         choice = self._get_user_choice(options)
@@ -301,11 +332,54 @@ class ShortcutQuiz(TrainerCore):
     
     def practice_shortcut(self, shortcut: Shortcut, number: int, total: int) -> str:
         """Practice a single shortcut - returns: 'completed', 'skipped', or 'exit'"""
-        self._display_shortcut_prompt(shortcut, number, total)
-        return self._practice_loop(shortcut)
+        if self.practice_mode == PracticeMode.QUIZ:
+            self._display_quiz_prompt(shortcut, number, total)
+            return self._quiz_loop(shortcut)
+        else:
+            self._display_shortcut_prompt(shortcut, number, total)
+            return self._practice_loop(shortcut)
+    
+    def _display_quiz_prompt(self, shortcut: Shortcut, number: int, total: int):
+        """Display the quiz prompt (without showing the shortcut)"""
+        self.clear_screen()
+        self.clear_capture_file()
+        
+        # Header
+        print("=" * 50)
+        print(f"{self.tool_name.upper()} QUIZ {number}/{total}")
+        
+        # Category and difficulty
+        if shortcut.category in self.categories:
+            cat = self.categories[shortcut.category]
+            self.print_color(f"{cat.icon} {cat.name}", cat.color.upper())
+        
+        difficulty_stars = "⭐" * shortcut.difficulty + "☆" * (3 - shortcut.difficulty)
+        print(f"Difficulty: {difficulty_stars}")
+        print("=" * 50)
+        print()
+        
+        # Display only the description
+        self.print_color(f"What's the {self.tool_name} shortcut for:", 'CYAN')
+        print()
+        self.print_color(f"    📋 {shortcut.description}", 'YELLOW')
+        print()
+        
+        if shortcut.is_chord:
+            self.print_color("    💡 This is a chord (multi-step) shortcut", 'BLUE')
+            print()
+        
+        print("-" * 50)
+        print()
+        
+        # Instructions
+        print("Type your answer:")
+        self.print_color("  • Press 'h' for a hint", 'CYAN')
+        self.print_color("  • Press ` (backtick) to skip", 'YELLOW')
+        self.print_color("  • Press `` (backtick twice) to exit", 'YELLOW')
+        print()
     
     def _display_shortcut_prompt(self, shortcut: Shortcut, number: int, total: int):
-        """Display the shortcut practice prompt"""
+        """Display the shortcut practice prompt (original behavior)"""
         self.clear_screen()
         self.clear_capture_file()
         
@@ -346,8 +420,150 @@ class ShortcutQuiz(TrainerCore):
         self.print_color("Press ` (backtick) to skip, `` (twice) to exit", 'YELLOW')
         print()
     
+    def _quiz_loop(self, shortcut: Shortcut) -> str:
+        """Quiz loop where shortcut is hidden initially"""
+        normalized_expected = self.normalize_keys(shortcut.keys)
+        attempts = 0
+        consecutive_backticks = 0
+        last_backtick_time = 0
+        hint_given = False
+        
+        # Track if we're waiting for a chord
+        is_chord = shortcut.is_chord
+        chord_parts = normalized_expected.split(' ') if is_chord else []
+        chord_index = 0
+        chord_attempt_started = False
+        
+        while True:
+            keys = self.read_new_keys()
+            
+            for key in keys:
+                key_lower = key.lower()
+                
+                # Check for hint request (only 'h' key alone)
+                if key_lower == 'h' and not hint_given:
+                    hint_given = True
+                    self.stats['hints_used'] += 1
+                    self._show_hint(shortcut)
+                    continue
+                
+                # Check for backtick (skip/exit key)
+                if key_lower in self.SKIP_EXIT_KEYS or key == '`':
+                    current_time = time.time()
+                    # Reset counter if more than 1 second has passed
+                    if current_time - last_backtick_time > 1.0:
+                        consecutive_backticks = 0
+                    
+                    consecutive_backticks += 1
+                    last_backtick_time = current_time
+                    
+                    if consecutive_backticks >= 2:
+                        print(f"You typed: ` (backtick) twice - Exiting...")
+                        return 'exit'
+                    print(f"You typed: ` (backtick) - Skipping...")
+                    # Show the correct answer when skipping
+                    display_keys = self.format_shortcut_for_display(shortcut.keys, shortcut.is_chord)
+                    self.print_color(f"The answer was: {display_keys}", 'YELLOW')
+                    time.sleep(1.5)
+                    return 'skipped'
+                
+                # Check for emergency exit keys
+                normalized_key = self.normalize_keys(key)
+                if normalized_key in self.EMERGENCY_EXIT_KEYS:
+                    print(f"You typed: {key} - Emergency exit...")
+                    return 'exit'
+                
+                # Reset backtick counter for non-backtick keys
+                consecutive_backticks = 0
+                
+                # Skip modifier-only combinations
+                if self._is_modifier_only(key):
+                    print(f"You typed: {key} (building shortcut...)")
+                    continue
+                
+                # Handle chord shortcuts
+                if is_chord:
+                    if not chord_attempt_started or chord_index == 0:
+                        chord_attempt_started = True
+                        attempts += 1
+                    
+                    print(f"You typed: {key}", end="")
+                    
+                    if normalized_key == chord_parts[chord_index]:
+                        chord_index += 1
+                        if chord_index >= len(chord_parts):
+                            return self._handle_quiz_success(shortcut, attempts, hint_given)
+                        else:
+                            self.print_color(f" ✅ Part {chord_index}/{len(chord_parts)} correct!", 'GREEN')
+                            print(f"Now type the next part...")
+                            chord_attempt_started = False
+                    else:
+                        chord_index = 0
+                        chord_attempt_started = False
+                        self.print_color(" ❌ Try again", 'RED')
+                        if attempts > 2 and not hint_given:
+                            print("💡 Press 'h' for a hint")
+                else:
+                    # Regular (non-chord) shortcut
+                    attempts += 1
+                    print(f"You typed: {key}", end="")
+                    
+                    if normalized_key == normalized_expected:
+                        return self._handle_quiz_success(shortcut, attempts, hint_given)
+                    else:
+                        self.print_color(" ❌ Try again", 'RED')
+                        if attempts > 2 and not hint_given:
+                            print("💡 Press 'h' for a hint")
+            
+            time.sleep(0.05)
+    
+    def _show_hint(self, shortcut: Shortcut):
+        """Show hint for quiz mode"""
+        print()
+        self.print_color("💡 HINT:", 'CYAN')
+        
+        # Show the formatted shortcut
+        display_keys = self.format_shortcut_for_display(shortcut.keys, shortcut.is_chord)
+        self.print_color(f"    The shortcut is: {display_keys}", 'MAGENTA')
+        
+        # Show tips if available
+        if shortcut.tips:
+            print(f"    Tip: {shortcut.tips[0]}")
+        
+        print()
+    
+    def _handle_quiz_success(self, shortcut: Shortcut, attempts: int, hint_used: bool) -> str:
+        """Handle successful quiz completion"""
+        self.print_color(" ✅ Correct!", 'GREEN')
+        self.stats['attempts'].append(attempts)
+        
+        # Update stats
+        if shortcut.category in self.stats['by_category']:
+            self.stats['by_category'][shortcut.category] += 1
+        self.stats['by_difficulty'][shortcut.difficulty] += 1
+        
+        # Feedback
+        if attempts == 1 and not hint_used:
+            self.print_color("🎯 Perfect! You remembered it!", 'GREEN')
+        elif attempts == 1 and hint_used:
+            self.print_color("👍 Good! You got it with a hint!", 'YELLOW')
+        elif attempts == 2:
+            self.print_color("👍 Great! Got it on the second try!", 'YELLOW')
+        else:
+            if hint_used:
+                print(f"Got it in {attempts} attempts with a hint!")
+            else:
+                print(f"Got it in {attempts} attempts!")
+        
+        # Show the full shortcut info
+        display_keys = self.format_shortcut_for_display(shortcut.keys, shortcut.is_chord)
+        print(f"\n📚 {display_keys} - {shortcut.description}")
+        
+        time.sleep(1.2)
+        return 'completed'
+    
     def _practice_loop(self, shortcut: Shortcut) -> str:
-        """Main practice loop for a shortcut"""
+        """Main practice loop for a shortcut (original behavior)"""
         normalized_expected = self.normalize_keys(shortcut.keys)
         attempts = 0
         consecutive_backticks = 0
@@ -491,6 +707,11 @@ class ShortcutQuiz(TrainerCore):
     def run_quiz(self):
         """Main quiz execution"""
         self._display_welcome()
+        
+        # Select mode (Practice vs Quiz)
+        self.practice_mode = self.select_mode()
+        
+        # Select shortcuts to practice
         mode, selected_shortcuts = self.select_practice_mode()
         self._prepare_practice(mode, selected_shortcuts)
         
@@ -515,14 +736,15 @@ class ShortcutQuiz(TrainerCore):
     
     def _display_welcome(self):
         """Display welcome screen"""
-        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE")
+        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} TRAINER")
         if self.tool_description:
             print(f"{self.tool_description}\n")
     
     def _prepare_practice(self, mode: str, shortcuts: List[Shortcut]):
         """Prepare for practice session"""
         self.clear_screen()
-        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} PRACTICE")
+        mode_type = "QUIZ" if self.practice_mode == PracticeMode.QUIZ else "PRACTICE"
+        self.show_header(f"{self.tool_icon} {self.tool_name.upper()} {mode_type}")
         
         mode_display = mode.replace('_', ' ').title()
         self.print_color(f"Mode: {mode_display}", 'MAGENTA')
@@ -530,7 +752,13 @@ class ShortcutQuiz(TrainerCore):
         
         self.print_color("📋 Instructions:", 'CYAN')
         print("  • The trainer will activate automatically")
-        print("  • Type each shortcut exactly as shown")
+        
+        if self.practice_mode == PracticeMode.QUIZ:
+            print("  • You'll see descriptions and guess the shortcuts")
+            self.print_color("  • Press 'h' for a hint if you get stuck", 'CYAN')
+        else:
+            print("  • Type each shortcut exactly as shown")
+        
         # Updated instructions
         self.print_color("  • Press ` (backtick) to skip a shortcut", 'YELLOW')
         self.print_color("  • Press `` (backtick twice) to exit", 'YELLOW')
@@ -557,8 +785,17 @@ class ShortcutQuiz(TrainerCore):
         """Display comprehensive practice results"""
         self.show_header(f"📊 {self.tool_name.upper()} RESULTS")
         
+        mode_type = "QUIZ" if self.practice_mode == PracticeMode.QUIZ else "PRACTICE"
+        self.print_color(f"Mode: {mode_type}", 'CYAN')
+        print()
+        
         self._display_score(practiced_shortcuts)
         self._display_performance()
+        
+        # Show hints used if in quiz mode
+        if self.practice_mode == PracticeMode.QUIZ and self.stats['hints_used'] > 0:
+            print(f"Hints used: {self.stats['hints_used']}")
+        
         self._display_breakdown()
         self._display_practiced_shortcuts(practiced_shortcuts)
         self._display_tips()
@@ -569,8 +806,12 @@ class ShortcutQuiz(TrainerCore):
     def _display_score(self, shortcuts: List[Shortcut]):
         """Display overall score"""
         if self.stats['completed'] == len(shortcuts):
-            self.print_color(f"🎉 PERFECT SCORE! 🎉", 'GREEN')
-            print(f"\nYou mastered all {len(shortcuts)} {self.tool_name} shortcuts!")
+            if self.practice_mode == PracticeMode.QUIZ and self.stats['hints_used'] == 0:
+                self.print_color(f"🏆 PERFECT MEMORY! 🏆", 'GREEN')
+                print(f"\nYou recalled all {len(shortcuts)} shortcuts without hints!")
+            else:
+                self.print_color(f"🎉 PERFECT SCORE! 🎉", 'GREEN')
+                print(f"\nYou mastered all {len(shortcuts)} {self.tool_name} shortcuts!")
             self._display_achievement_message()
         else:
             print(f"Completed: {self.stats['completed']}/{len(shortcuts)}")
@@ -597,12 +838,20 @@ class ShortcutQuiz(TrainerCore):
         avg_attempts = sum(self.stats['attempts']) / len(self.stats['attempts'])
         print(f"\nAverage attempts per shortcut: {avg_attempts:.1f}")
         
-        if avg_attempts < 1.5:
-            self.print_color("🏆 Excellent muscle memory!", 'GREEN')
-        elif avg_attempts < 2.5:
-            self.print_color("👍 Good job! Keep practicing!", 'YELLOW')
+        if self.practice_mode == PracticeMode.QUIZ:
+            if avg_attempts < 1.5 and self.stats['hints_used'] == 0:
+                self.print_color("🏆 Excellent memory! You really know these shortcuts!", 'GREEN')
+            elif avg_attempts < 2.0:
+                self.print_color("👍 Great recall! Keep practicing to perfect it!", 'YELLOW')
+            else:
+                self.print_color("💪 You're learning! Regular practice builds muscle memory!", 'CYAN')
         else:
-            self.print_color("💪 You're learning! Practice makes perfect!", 'CYAN')
+            if avg_attempts < 1.5:
+                self.print_color("🏆 Excellent muscle memory!", 'GREEN')
+            elif avg_attempts < 2.5:
+                self.print_color("👍 Good job! Keep practicing!", 'YELLOW')
+            else:
+                self.print_color("💪 You're learning! Practice makes perfect!", 'CYAN')
     
     def _display_breakdown(self):
         """Display category and difficulty breakdown"""
@@ -652,34 +901,41 @@ class ShortcutQuiz(TrainerCore):
     def _display_tips(self):
         """Display tool-specific tips"""
         print("\n" + "=" * 50)
-        self.print_color(f"💡 {self.tool_name} Pro Tips:", 'CYAN')
         
-        tips = {
-            "VSCode": [
-                "• Practice these shortcuts in your actual code",
-                "• Combine shortcuts for powerful workflows",
-                "• Customize keybindings: Cmd+K Cmd+S"
-            ],
-            "macOS": [
-                "• Use these shortcuts in your daily workflow",
-                "• Most shortcuts work across all Mac apps",
-                "• Explore app-specific shortcuts in Help menu"
-            ],
-            "Asana": [
-                "• Use Tab+N to quickly create tasks",
-                "• J and K navigate like Vim",
-                "• Tab+numbers switch between views"
+        if self.practice_mode == PracticeMode.QUIZ:
+            self.print_color("💡 Quiz Mode Tips:", 'CYAN')
+            print("  • Try to recall shortcuts without hints")
+            print("  • Practice daily to build long-term memory")
+            print("  • Switch to Practice Mode if you need to learn new shortcuts")
+        else:
+            self.print_color(f"💡 {self.tool_name} Pro Tips:", 'CYAN')
+            
+            tips = {
+                "VSCode": [
+                    "• Practice these shortcuts in your actual code",
+                    "• Combine shortcuts for powerful workflows",
+                    "• Customize keybindings: Cmd+K Cmd+S"
+                ],
+                "macOS": [
+                    "• Use these shortcuts in your daily workflow",
+                    "• Most shortcuts work across all Mac apps",
+                    "• Explore app-specific shortcuts in Help menu"
+                ],
+                "Asana": [
+                    "• Use Tab+N to quickly create tasks",
+                    "• J and K navigate like Vim",
+                    "• Tab+numbers switch between views"
+                ]
+            }
+            
+            default_tips = [
+                "• Practice daily for muscle memory",
+                "• Start with easy shortcuts first",
+                "• Use shortcuts in real work"
             ]
-        }
-        
-        default_tips = [
-            "• Practice daily for muscle memory",
-            "• Start with easy shortcuts first",
-            "• Use shortcuts in real work"
-        ]
-        
-        for tip in tips.get(self.tool_name, default_tips):
-            print(tip)
+            
+            for tip in tips.get(self.tool_name, default_tips):
+                print(tip)
 
 
 def main():
