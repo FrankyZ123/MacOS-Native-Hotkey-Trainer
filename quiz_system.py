@@ -9,7 +9,7 @@ import time
 import sys
 import random
 from pathlib import Path
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Set
 from dataclasses import dataclass, field
 from enum import Enum
 from trainer_core import TrainerCore
@@ -43,7 +43,7 @@ class Category:
     """Category information"""
     name: str
     color: str = "blue"
-    icon: str = "📋"
+    icon: str = "🔋"
 
 
 @dataclass
@@ -79,6 +79,9 @@ class ShortcutQuiz(TrainerCore):
         'pageup': 'Page Up',
         'pagedown': 'Page Down'
     }
+    
+    # Modifier keys that don't count as attempts on their own
+    MODIFIER_KEYS = {'cmd', 'alt', 'shift', 'ctrl', 'fn', 'capslock'}
     
     # Changed: Use backtick for skip/exit instead of ESC
     SKIP_EXIT_KEYS = ['`', 'backtick', 'grave']  # Backtick key for skip/exit
@@ -200,6 +203,11 @@ class ShortcutQuiz(TrainerCore):
         
         return ' '.join(display_parts)
     
+    def _is_modifier_only(self, key: str) -> bool:
+        """Check if a key combination contains ONLY modifier keys"""
+        parts = self.normalize_keys(key).split('+')
+        return all(part in self.MODIFIER_KEYS for part in parts)
+    
     def select_practice_mode(self) -> Tuple[str, List[Shortcut]]:
         """Interactive practice mode selection"""
         self.clear_screen()
@@ -320,7 +328,7 @@ class ShortcutQuiz(TrainerCore):
         print()
         display_keys = self.format_shortcut_for_display(shortcut.keys, shortcut.is_chord)
         self.print_color(f"    🎯  {display_keys}", 'MAGENTA')
-        print(f"    📝 {shortcut.description}")
+        print(f"    📋 {shortcut.description}")
         print()
         print("-" * 50)
         
@@ -345,6 +353,12 @@ class ShortcutQuiz(TrainerCore):
         consecutive_backticks = 0
         last_backtick_time = 0
         
+        # Track if we're waiting for a chord
+        is_chord = shortcut.is_chord
+        chord_parts = normalized_expected.split(' ') if is_chord else []
+        chord_index = 0
+        chord_attempt_started = False
+        
         while True:
             keys = self.read_new_keys()
             
@@ -367,21 +381,59 @@ class ShortcutQuiz(TrainerCore):
                     print(f"You typed: ` (backtick) - Skipping...")
                     return 'skipped'
                 
-                # Check for emergency exit keys (but NOT escape!)
+                # Check for emergency exit keys
                 normalized_key = self.normalize_keys(key)
-                if normalized_key in ['ctrl+c', 'cmd+q', 'cmd+.']:
+                if normalized_key in self.EMERGENCY_EXIT_KEYS:
                     print(f"You typed: {key} - Emergency exit...")
                     return 'exit'
                 
                 # Reset backtick counter for non-backtick keys
                 consecutive_backticks = 0
-                attempts += 1
-                print(f"You typed: {key}", end="")
                 
-                if self.normalize_keys(key) == normalized_expected:
-                    return self._handle_success(shortcut, attempts)
+                # Skip modifier-only combinations (like "cmd", "cmd+shift", etc.)
+                if self._is_modifier_only(key):
+                    # Don't count as attempt, just show what was pressed
+                    print(f"You typed: {key} (building shortcut...)")
+                    continue
+                
+                # Handle chord shortcuts
+                if is_chord:
+                    # This is a real key press with non-modifier, so it's an attempt
+                    if not chord_attempt_started or chord_index == 0:
+                        chord_attempt_started = True
+                        attempts += 1
+                    
+                    print(f"You typed: {key}", end="")
+                    
+                    if normalized_key == chord_parts[chord_index]:
+                        # Correct part of the chord
+                        chord_index += 1
+                        if chord_index >= len(chord_parts):
+                            # Completed the full chord
+                            return self._handle_success(shortcut, attempts)
+                        else:
+                            # Waiting for next part of chord
+                            self.print_color(f" ✅ Part {chord_index}/{len(chord_parts)} correct!", 'GREEN')
+                            print(f"Now type: {self.format_shortcut_for_display(chord_parts[chord_index])}")
+                            chord_attempt_started = False  # Reset for next part
+                    else:
+                        # Wrong chord part - restart
+                        chord_index = 0
+                        chord_attempt_started = False
+                        self.print_color(" ❌ Try again", 'RED')
+                        if attempts > 2:
+                            self._provide_hint(chord_parts[0], normalized_key)
+                        print(f"Starting over. Type: {self.format_shortcut_for_display(chord_parts[0])}")
                 else:
-                    self._handle_mistake(key, normalized_expected, shortcut.difficulty, attempts)
+                    # Regular (non-chord) shortcut
+                    # This is a real key press with non-modifier, so it's an attempt
+                    attempts += 1
+                    print(f"You typed: {key}", end="")
+                    
+                    if normalized_key == normalized_expected:
+                        return self._handle_success(shortcut, attempts)
+                    else:
+                        self._handle_mistake(key, normalized_expected, shortcut.difficulty, attempts)
             
             time.sleep(0.05)
     
@@ -408,20 +460,9 @@ class ShortcutQuiz(TrainerCore):
     
     def _handle_mistake(self, key: str, expected: str, difficulty: int, attempts: int):
         """Handle incorrect attempt"""
-        if self._is_meaningful_attempt(key):
-            self.print_color(" ❌ Try again", 'RED')
-            if difficulty <= 2 and attempts > 2:
-                self._provide_hint(expected, self.normalize_keys(key))
-        else:
-            print()
-    
-    def _is_meaningful_attempt(self, key: str) -> bool:
-        """Check if this was a real attempt vs accidental keypress"""
-        # Don't count backtick as meaningful since it's our skip key
-        meaningful_keys = ['space', 'return', 'delete', 'tab']
-        return ('+' in key or 
-                key.lower() in meaningful_keys or 
-                key.lower().startswith('f'))
+        self.print_color(" ❌ Try again", 'RED')
+        if difficulty <= 2 and attempts > 2:
+            self._provide_hint(expected, self.normalize_keys(key))
     
     def _provide_hint(self, expected: str, actual: str):
         """Provide contextual hints based on the mistake"""
