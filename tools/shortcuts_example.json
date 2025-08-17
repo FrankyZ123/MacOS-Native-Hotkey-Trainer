@@ -1,0 +1,80 @@
+{
+    "name": "Example Tool",
+    "icon": "🎯",
+    "description": "Template for creating your own tool shortcuts",
+    "version": "1.0.0",
+    "categories": {
+      "basic": {
+        "name": "Basic",
+        "color": "green",
+        "icon": "🟢"
+      },
+      "intermediate": {
+        "name": "Intermediate",
+        "color": "yellow",
+        "icon": "🟡"
+      },
+      "advanced": {
+        "name": "Advanced",
+        "color": "red",
+        "icon": "🔴"
+      }
+    },
+    "shortcuts": [
+      {
+        "keys": "cmd+n",
+        "description": "New file/document",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": [
+          "Creates a new file",
+          "This is the first tip",
+          "This is the second tip"
+        ]
+      },
+      {
+        "keys": "cmd+s",
+        "description": "Save",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Saves the current document"]
+      },
+      {
+        "keys": "cmd+shift+s",
+        "description": "Save as",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Save with a different name or location"]
+      },
+      {
+        "keys": "cmd+o",
+        "description": "Open",
+        "category": "basic",
+        "difficulty": 1,
+        "tips": ["Open a file"]
+      },
+      {
+        "keys": "cmd+k cmd+s",
+        "description": "Example chord shortcut",
+        "category": "advanced",
+        "difficulty": 3,
+        "is_chord": true,
+        "tips": [
+          "This is a chord: press Cmd+K, release, then Cmd+S",
+          "Chord shortcuts are two-step combinations"
+        ]
+      }
+    ],
+    "practice_sets": {
+      "basics": {
+        "name": "Basic Shortcuts",
+        "description": "Start with these easy shortcuts",
+        "shortcut_indices": [0, 1, 2, 3]
+      },
+      "all": {
+        "name": "All Shortcuts",
+        "description": "Practice everything",
+        "shortcut_indices": null
+      }
+    }
+  }

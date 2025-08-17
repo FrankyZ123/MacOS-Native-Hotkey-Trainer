@@ -1,157 +1,262 @@
 {
-    "name": "macOS",
-    "description": "Essential macOS keyboard shortcuts",
-    "icon": "🍎",
-    "version": "1.0.0",
-    "categories": {
-      "basic": {
-        "name": "Basic Operations",
-        "color": "green",
-        "icon": "🟢"
-      },
-      "file_management": {
-        "name": "File Management",
-        "color": "blue",
-        "icon": "📁"
-      },
-      "system": {
-        "name": "System Controls",
-        "color": "yellow",
-        "icon": "⚙️"
-      },
-      "productivity": {
-        "name": "Productivity",
-        "color": "magenta",
-        "icon": "🚀"
-      }
+  "name": "macOS",
+  "icon": "🍎",
+  "description": "Essential macOS system keyboard shortcuts",
+  "version": "1.0.0",
+  "categories": {
+    "basic": {
+      "name": "Basic",
+      "color": "green",
+      "icon": "🟢"
     },
-    "shortcuts": [
-      {
-        "keys": "cmd+n",
-        "description": "New window/file",
-        "category": "basic",
-        "difficulty": 1,
-        "tips": ["Universal shortcut across most apps", "Works in Finder to create new window"]
-      },
-      {
-        "keys": "shift+cmd+n",
-        "description": "New folder",
-        "category": "file_management",
-        "difficulty": 1,
-        "tips": ["Works in Finder", "Creates folder in current directory"]
-      },
-      {
-        "keys": "space",
-        "description": "Quick Look/Play",
-        "category": "basic",
-        "difficulty": 1,
-        "tips": ["Select a file and press Space to preview", "Works with most file types"]
-      },
-      {
-        "keys": "cmd+delete",
-        "description": "Delete line/Move to trash",
-        "category": "basic",
-        "difficulty": 1,
-        "tips": ["In text editors: deletes entire line", "In Finder: moves to trash"]
-      },
-      {
-        "keys": "shift+cmd+.",
-        "description": "Show hidden files",
-        "category": "file_management",
-        "difficulty": 2,
-        "tips": ["Toggle hidden files in Finder", "Useful for accessing system files"]
-      },
-      {
-        "keys": "cmd+w",
-        "description": "Close tab/window",
-        "category": "basic",
-        "difficulty": 1,
-        "tips": ["Closes current tab or window", "Add Shift to close all windows"]
-      },
-      {
-        "keys": "alt+cmd+escape",
-        "description": "Force quit applications",
-        "category": "system",
-        "difficulty": 2,
-        "tips": ["Opens force quit dialog", "Useful when apps freeze"]
-      },
-      {
-        "keys": "shift+cmd+3",
-        "description": "Screenshot entire screen",
-        "category": "productivity",
-        "difficulty": 1,
-        "tips": ["Saves to desktop by default", "Add Control to copy to clipboard"]
-      },
-      {
-        "keys": "shift+cmd+4",
-        "description": "Screenshot selection",
-        "category": "productivity",
-        "difficulty": 1,
-        "tips": ["Drag to select area", "Press Space to capture window"]
-      },
-      {
-        "keys": "shift+cmd+5",
-        "description": "Screenshot/recording options",
-        "category": "productivity",
-        "difficulty": 2,
-        "tips": ["Opens screenshot toolbar", "Can record screen or take timed shots"]
-      },
-      {
-        "keys": "ctrl+cmd+space",
-        "description": "Emoji & symbols picker",
-        "category": "productivity",
-        "difficulty": 2,
-        "tips": ["Quick emoji access", "Also includes special characters"]
-      },
-      {
-        "keys": "shift+cmd+/",
-        "description": "Help menu search",
-        "category": "system",
-        "difficulty": 3,
-        "tips": ["Search menu items in any app", "Great for finding hidden features"]
-      },
-      {
-        "keys": "cmd+space",
-        "description": "Spotlight search",
-        "category": "system",
-        "difficulty": 1,
-        "tips": ["System-wide search", "Can do calculations and conversions"]
-      },
-      {
-        "keys": "cmd+tab",
-        "description": "Switch between apps",
-        "category": "basic",
-        "difficulty": 1,
-        "tips": ["Hold Cmd and tap Tab to cycle", "Add Shift to go backwards"]
-      },
-      {
-        "keys": "cmd+`",
-        "description": "Switch between windows of same app",
-        "category": "basic",
-        "difficulty": 2,
-        "tips": ["Cycles through app windows", "That's the backtick key"]
-      }
-    ],
-    "practice_sets": {
-      "beginner": {
-        "name": "Beginner Essentials",
-        "description": "Start with these fundamental shortcuts",
-        "shortcut_indices": [0, 2, 5, 7, 12, 13]
-      },
-      "file_master": {
-        "name": "File Management Master",
-        "description": "Master Finder and file operations",
-        "shortcut_indices": [0, 1, 2, 3, 4, 5]
-      },
-      "power_user": {
-        "name": "Power User Pack",
-        "description": "Advanced productivity shortcuts",
-        "shortcut_indices": [6, 9, 10, 11, 14]
-      },
-      "quick_10": {
-        "name": "Quick 10",
-        "description": "Top 10 most useful shortcuts",
-        "shortcut_indices": [0, 1, 2, 3, 4, 5, 6, 7, 10, 12]
-      }
+    "window": {
+      "name": "Window Management",
+      "color": "blue",
+      "icon": "🔵"
+    },
+    "screenshot": {
+      "name": "Screenshots",
+      "color": "yellow",
+      "icon": "📸"
+    },
+    "system": {
+      "name": "System",
+      "color": "red",
+      "icon": "⚙️"
+    }
+  },
+  "shortcuts": [
+    {
+      "keys": "cmd+space",
+      "description": "Spotlight search",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Quick app launcher", "Search files, apps, and more"]
+    },
+    {
+      "keys": "cmd+tab",
+      "description": "Switch applications",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Hold Cmd and press Tab repeatedly", "Add Shift to go backwards"]
+    },
+    {
+      "keys": "cmd+`",
+      "description": "Switch windows of same app",
+      "category": "window",
+      "difficulty": 1,
+      "tips": ["Cycles through windows", "Only works within same application"]
+    },
+    {
+      "keys": "cmd+q",
+      "description": "Quit application",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Completely closes the app", "Different from Cmd+W which closes window"]
+    },
+    {
+      "keys": "cmd+w",
+      "description": "Close window",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Closes current window", "App stays running"]
+    },
+    {
+      "keys": "cmd+m",
+      "description": "Minimize window",
+      "category": "window",
+      "difficulty": 1,
+      "tips": ["Sends window to dock", "Click dock icon to restore"]
+    },
+    {
+      "keys": "cmd+h",
+      "description": "Hide application",
+      "category": "window",
+      "difficulty": 1,
+      "tips": ["Hides all windows of current app", "Cmd+Tab to bring back"]
+    },
+    {
+      "keys": "cmd+shift+3",
+      "description": "Screenshot entire screen",
+      "category": "screenshot",
+      "difficulty": 1,
+      "tips": ["Saves to desktop", "Add Ctrl to copy to clipboard"]
+    },
+    {
+      "keys": "cmd+shift+4",
+      "description": "Screenshot selection",
+      "category": "screenshot",
+      "difficulty": 1,
+      "tips": ["Drag to select area", "Press Space to capture window"]
+    },
+    {
+      "keys": "cmd+shift+5",
+      "description": "Screenshot/recording options",
+      "category": "screenshot",
+      "difficulty": 2,
+      "tips": ["Shows capture toolbar", "Can record screen or take screenshots"]
+    },
+    {
+      "keys": "cmd+c",
+      "description": "Copy",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Copies to clipboard", "Works in most apps"]
+    },
+    {
+      "keys": "cmd+v",
+      "description": "Paste",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Pastes from clipboard", "Use Cmd+Shift+V for paste without formatting"]
+    },
+    {
+      "keys": "cmd+x",
+      "description": "Cut",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Cuts to clipboard", "Removes original"]
+    },
+    {
+      "keys": "cmd+z",
+      "description": "Undo",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Reverses last action", "Cmd+Shift+Z to redo"]
+    },
+    {
+      "keys": "cmd+a",
+      "description": "Select all",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Selects everything", "Works in text and file browsers"]
+    },
+    {
+      "keys": "cmd+f",
+      "description": "Find",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Opens find dialog", "Cmd+G for find next"]
+    },
+    {
+      "keys": "cmd+,",
+      "description": "Open preferences",
+      "category": "system",
+      "difficulty": 1,
+      "tips": ["Works in most apps", "Opens app settings"]
+    },
+    {
+      "keys": "cmd+shift+.",
+      "description": "Show hidden files",
+      "category": "system",
+      "difficulty": 2,
+      "tips": ["Toggle in Finder", "Shows files starting with dot"]
+    },
+    {
+      "keys": "cmd+delete",
+      "description": "Move to trash",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Deletes selected files", "Cmd+Shift+Delete to empty trash"]
+    },
+    {
+      "keys": "cmd+shift+delete",
+      "description": "Empty trash",
+      "category": "system",
+      "difficulty": 2,
+      "tips": ["Permanently deletes trash contents", "Add Option to skip confirmation"]
+    },
+    {
+      "keys": "ctrl+cmd+space",
+      "description": "Emoji picker",
+      "category": "system",
+      "difficulty": 2,
+      "tips": ["Opens emoji & symbols", "Works in any text field"]
+    },
+    {
+      "keys": "ctrl+cmd+f",
+      "description": "Toggle fullscreen",
+      "category": "window",
+      "difficulty": 1,
+      "tips": ["Enter/exit fullscreen mode", "Works in most apps"]
+    },
+    {
+      "keys": "cmd+shift+n",
+      "description": "New folder",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Creates new folder in Finder", "Name it immediately"]
+    },
+    {
+      "keys": "cmd+d",
+      "description": "Duplicate",
+      "category": "basic",
+      "difficulty": 1,
+      "tips": ["Duplicates selected file", "Creates copy in same location"]
+    },
+    {
+      "keys": "cmd+i",
+      "description": "Get info",
+      "category": "system",
+      "difficulty": 1,
+      "tips": ["Shows file information", "Can change permissions"]
+    },
+    {
+      "keys": "cmd+option+esc",
+      "description": "Force quit",
+      "category": "system",
+      "difficulty": 2,
+      "tips": ["Opens force quit dialog", "For unresponsive apps"]
+    },
+    {
+      "keys": "cmd+ctrl+q",
+      "description": "Lock screen",
+      "category": "system",
+      "difficulty": 2,
+      "tips": ["Immediately locks screen", "Requires password to unlock"]
+    },
+    {
+      "keys": "cmd+option+d",
+      "description": "Show/hide dock",
+      "category": "window",
+      "difficulty": 2,
+      "tips": ["Toggles dock visibility", "Gives more screen space"]
+    },
+    {
+      "keys": "ctrl+left",
+      "description": "Switch to left space",
+      "category": "window",
+      "difficulty": 2,
+      "tips": ["Move between desktops", "Set up spaces in Mission Control"]
+    },
+    {
+      "keys": "ctrl+right",
+      "description": "Switch to right space",
+      "category": "window",
+      "difficulty": 2,
+      "tips": ["Move between desktops", "Add Cmd to bring window along"]
+    }
+  ],
+  "practice_sets": {
+    "essentials": {
+      "name": "Daily Essentials",
+      "description": "Must-know shortcuts for everyday use",
+      "shortcut_indices": [0, 1, 3, 4, 10, 11, 12, 13, 14, 15]
+    },
+    "power_user": {
+      "name": "Power User",
+      "description": "Advanced shortcuts for productivity",
+      "shortcut_indices": [2, 5, 6, 16, 17, 20, 21, 25, 26, 27]
+    },
+    "screenshots": {
+      "name": "Screenshot Master",
+      "description": "All screenshot shortcuts",
+      "shortcut_indices": [7, 8, 9]
+    },
+    "all": {
+      "name": "All Shortcuts",
+      "description": "Practice all macOS shortcuts",
+      "shortcut_indices": null
     }
   }
+}
